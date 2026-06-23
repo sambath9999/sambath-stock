@@ -1,0 +1,3162 @@
+<!DOCTYPE html>
+<html lang="km" class="h-full bg-slate-50 dark:bg-slate-900">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Inventory Pro - Cloud POS & Inventory</title>
+  <!-- Google Fonts for Khmer & English -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Kantumruy Pro"', '"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            khmergold: '#D4AF37',
+            enterprise: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons (We will use SVG paths directly for guaranteed performance and visual appeal) -->
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+      background: #475569;
+    }
+    /* Thermal Print Simulation styling */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #thermal-receipt, #thermal-receipt * {
+        visibility: visible;
+      }
+      #thermal-receipt {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 80mm;
+      }
+    }
+  </style>
+</head>
+<body class="h-full font-sans text-slate-800 dark:text-slate-100 transition-colors duration-200">
+
+  <!-- Root Vue/React-like state container powered by Vanilla JS -->
+  <div id="app" class="flex h-full overflow-hidden">
+    
+    <!-- ==================== LOGIN VIEW ==================== -->
+    <div id="view-login" class="hidden w-full h-full flex items-center justify-center bg-slate-950 relative overflow-hidden">
+      <!-- Premium Tech/Corporate Background blobs -->
+      <div class="absolute w-[500px] h-[500px] rounded-full bg-blue-600/10 blur-[100px] -top-40 -left-40"></div>
+      <div class="absolute w-[500px] h-[500px] rounded-full bg-cyan-600/10 blur-[100px] -bottom-40 -right-40"></div>
+      
+      <div class="w-full max-w-md p-8 bg-slate-900/80 border border-slate-800 rounded-3xl shadow-2xl backdrop-blur-xl relative z-10 mx-4">
+        <!-- Logo Header -->
+        <div class="text-center mb-8">
+          <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 to-cyan-500 text-white font-bold text-2xl mb-4 shadow-lg shadow-cyan-500/20">
+            SP
+          </div>
+          <h1 class="text-2xl font-bold text-white tracking-wide">Smart Inventory Pro</h1>
+          <p class="text-slate-400 text-sm mt-1">ប្រព័ន្ធគ្រប់គ្រងឃ្លាំងទំនិញ និងលក់ទំនើប</p>
+        </div>
+        
+        <!-- Alerts Area inside login -->
+        <div id="login-alert" class="hidden mb-4 p-4 rounded-xl text-sm transition-all"></div>
+
+        <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5">
+          <div>
+            <label class="block text-slate-300 text-xs font-semibold uppercase tracking-wider mb-2">អាសយដ្ឋានអ៊ីមែល (Email)</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </span>
+              <input type="email" id="login-email" required class="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-white placeholder-slate-600 outline-none transition" placeholder="admin@smart.com ឬ staff@smart.com">
+            </div>
+          </div>
+          
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <label class="block text-slate-300 text-xs font-semibold uppercase tracking-wider">លេខកូដសម្ងាត់ (Password)</label>
+              <button type="button" onclick="handleForgotPassword()" class="text-xs text-cyan-400 hover:underline">ភ្លេចលេខកូដសម្ងាត់?</button>
+            </div>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </span>
+              <input type="password" id="login-password" required class="w-full pl-11 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-xl focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-white placeholder-slate-600 outline-none transition" placeholder="••••••••">
+            </div>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <label class="flex items-center cursor-pointer">
+              <input type="checkbox" id="login-remember" class="sr-only peer">
+              <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500 relative"></div>
+              <span class="ml-2.5 text-xs text-slate-400 font-medium">ចងចាំខ្ញុំ (Remember Me)</span>
+            </label>
+          </div>
+          
+          <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white font-semibold rounded-xl shadow-lg shadow-blue-500/10 focus:outline-none transition active:scale-95 flex items-center justify-center gap-2">
+            <span>ចូលប្រព័ន្ធ</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          </button>
+        </form>
+
+        <div class="mt-8 pt-6 border-t border-slate-800 flex flex-col gap-2.5 text-xs text-slate-400">
+          <p class="text-center font-semibold text-slate-300 mb-1">គណនីសាកល្បងរហ័ស (Demo Accounts):</p>
+          <div class="grid grid-cols-2 gap-2 text-[11px]">
+            <div class="p-2 bg-slate-950 border border-slate-800 rounded-lg">
+              <span class="font-bold text-cyan-400">Admin/គ្រប់គ្រង:</span><br>
+              admin@smart.com (123456)
+            </div>
+            <div class="p-2 bg-slate-950 border border-slate-800 rounded-lg">
+              <span class="font-bold text-teal-400">Staff/បុគ្គលិក:</span><br>
+              staff@smart.com (123456)
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== APP LAYOUT VIEW ==================== -->
+    <div id="view-app" class="hidden w-full h-full flex flex-row overflow-hidden bg-slate-50 dark:bg-slate-950">
+      
+      <!-- SIDEBAR -->
+      <aside id="sidebar" class="w-72 bg-slate-900 border-r border-slate-800 text-slate-300 flex flex-col flex-shrink-0 transition-all duration-300 h-full relative z-20">
+        <!-- Brand -->
+        <div class="h-20 flex items-center justify-between px-6 border-b border-slate-800">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center font-bold text-white shadow-lg shadow-cyan-500/20">SP</div>
+            <div>
+              <h2 class="font-bold text-white text-base tracking-wide">Smart Inventory</h2>
+              <span class="text-[10px] text-cyan-400 uppercase tracking-widest font-bold">V1.0.0 Cloud</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Role Indicator Badge -->
+        <div class="px-6 py-4 border-b border-slate-800/50 bg-slate-950/20 flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-white text-xs" id="user-avatar">
+            U
+          </div>
+          <div>
+            <h4 class="font-medium text-xs text-white" id="user-name-display">អ្នកប្រើប្រាស់</h4>
+            <span class="text-[10px] px-2 py-0.5 rounded-full inline-block mt-0.5 font-bold" id="user-role-display">...</span>
+          </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="flex-1 px-4 py-4 space-y-1 overflow-y-auto" id="sidebar-nav">
+          <!-- Populated by JS dynamic navigation builder with Khmer translation -->
+        </nav>
+
+        <!-- Footer Dark Mode & Logout Section -->
+        <div class="p-4 border-t border-slate-800 flex flex-col gap-2">
+          <!-- Dark Mode Toggle Toggle Switch -->
+          <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/40 border border-slate-800/40">
+            <span class="text-xs text-slate-400 font-medium">របៀបងងឹត (Dark Mode)</span>
+            <button onclick="toggleDarkMode()" id="dark-mode-btn" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-slate-700">
+              <span class="sr-only">Toggle dark mode</span>
+              <span id="dark-mode-dot" class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0"></span>
+            </button>
+          </div>
+          
+          <button onclick="handleLogout()" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold text-rose-400 hover:bg-rose-500/10 rounded-xl transition duration-150">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            <span>ចាកចេញពីប្រព័ន្ធ</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- MAIN AREA -->
+      <main class="flex-1 flex flex-col overflow-hidden">
+        
+        <!-- TOP HEADER NAVBAR -->
+        <header class="h-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800/60 px-6 flex items-center justify-between flex-shrink-0">
+          <div class="flex items-center gap-4">
+            <button id="toggle-sidebar-btn" onclick="toggleSidebar()" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500 dark:text-slate-400">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </button>
+            <h1 class="text-xl font-bold text-slate-900 dark:text-white" id="current-view-title">ផ្ទាំងគ្រប់គ្រង (Dashboard)</h1>
+          </div>
+
+          <!-- Alerts / Custom Notifications Button & Store Info -->
+          <div class="flex items-center gap-4">
+            <!-- Low Stock Badges alert widget -->
+            <div id="low-stock-alert-header" class="hidden flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-full text-xs font-semibold animate-pulse cursor-pointer" onclick="showLowStockModal()">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              <span>ទំនិញជិតអស់ពីស្តុក <span id="low-stock-badge-count" class="bg-amber-500 text-white px-1.5 py-0.5 rounded-full text-[10px]">0</span></span>
+            </div>
+
+            <div class="flex flex-col text-right">
+              <span class="text-sm font-semibold text-slate-800 dark:text-slate-100" id="header-shop-name">Smart POS Shop</span>
+              <span class="text-xs text-slate-400" id="header-shop-currency">Currency: USD ($)</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- VIEW WRAPPERS -->
+        <div class="flex-1 overflow-y-auto p-6 bg-slate-50 dark:bg-slate-950" id="view-content-root">
+          
+          <!-- ==================== 1. DASHBOARD VIEW ==================== -->
+          <div id="section-dashboard" class="space-y-6">
+            <!-- Primary KPIs Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <!-- Total Products KPI Card -->
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl flex items-center justify-between shadow-sm">
+                <div class="space-y-1">
+                  <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 tracking-wider uppercase">ទំនិញសរុប</span>
+                  <h3 class="text-2xl font-bold dark:text-white" id="kpi-total-products">0</h3>
+                  <span class="text-xs text-slate-500 font-medium" id="kpi-categories-span">0 ក្រុមទំនិញ</span>
+                </div>
+                <div class="p-3 bg-blue-100 dark:bg-blue-500/10 rounded-xl text-blue-600 dark:text-blue-400">
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>
+              </div>
+
+              <!-- Total Stock In Hand KPI Card -->
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl flex items-center justify-between shadow-sm">
+                <div class="space-y-1">
+                  <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 tracking-wider uppercase">ស្តុកសរុប</span>
+                  <h3 class="text-2xl font-bold text-amber-500" id="kpi-total-stock">0</h3>
+                  <span class="text-xs text-slate-500 font-medium" id="kpi-stock-value">តម្លៃ: $0.00</span>
+                </div>
+                <div class="p-3 bg-amber-100 dark:bg-amber-500/10 rounded-xl text-amber-600 dark:text-amber-400">
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>
+              </div>
+
+              <!-- Sales KPI Card -->
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl flex items-center justify-between shadow-sm">
+                <div class="space-y-1">
+                  <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 tracking-wider uppercase">ការលក់សរុប</span>
+                  <h3 class="text-2xl font-bold text-emerald-500" id="kpi-total-sales">$0.00</h3>
+                  <span class="text-xs text-slate-500 font-medium" id="kpi-total-sales-count">0 វិក្កយបត្រ</span>
+                </div>
+                <div class="p-3 bg-emerald-100 dark:bg-emerald-500/10 rounded-xl text-emerald-600 dark:text-emerald-400">
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>
+              </div>
+
+              <!-- Profit KPI Card -->
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl flex items-center justify-between shadow-sm">
+                <div class="space-y-1">
+                  <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 tracking-wider uppercase">ប្រាក់ចំណេញសរុប</span>
+                  <h3 class="text-2xl font-bold text-teal-500" id="kpi-total-profit">$0.00</h3>
+                  <span class="text-xs text-slate-500 font-medium">គិតតាមថ្លៃដើមផលិតផល</span>
+                </div>
+                <div class="p-3 bg-teal-100 dark:bg-teal-500/10 rounded-xl text-teal-600 dark:text-teal-400">
+                  <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <!-- Sales & Profit Chart Container -->
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl lg:col-span-2 shadow-sm">
+                <h3 class="text-sm font-bold text-slate-800 dark:text-white mb-4">ប្រៀបធៀបចំណូល និងប្រាក់ចំណេញ (Sales & Profit)</h3>
+                <div class="relative h-80">
+                  <canvas id="chart-sales-profit"></canvas>
+                </div>
+              </div>
+
+              <!-- Top Selling Products list -->
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm flex flex-col">
+                <h3 class="text-sm font-bold text-slate-800 dark:text-white mb-4">ទំនិញលក់ដាច់ជាងគេ (Top Selling Products)</h3>
+                <div class="flex-1 overflow-y-auto space-y-4 pr-1" id="top-selling-list">
+                  <!-- Generated dynamically in App JS -->
+                  <div class="text-center text-xs text-slate-400 py-8">គ្មានទិន្នន័យនៃការលក់នៅឡើយទេ</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Activities & Action Panel -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Recent Products Added -->
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
+                <h3 class="text-sm font-bold text-slate-800 dark:text-white mb-4">ទំនិញដែលបានបញ្ចូលថ្មីៗ</h3>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left border-collapse">
+                    <thead>
+                      <tr class="border-b border-slate-100 dark:border-slate-800 text-xs text-slate-400 font-medium pb-2">
+                        <th class="pb-3">រូបភាព</th>
+                        <th class="pb-3">ទំនិញ / ឈ្មោះខ្មែរ</th>
+                        <th class="pb-3 text-right">តម្លៃលក់</th>
+                        <th class="pb-3 text-right">ស្តុក</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-600 dark:text-slate-300" id="recent-products-table">
+                      <!-- Populated dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Sales History Overview -->
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm">
+                <h3 class="text-sm font-bold text-slate-800 dark:text-white mb-4">ប្រវត្តិលក់ចុងក្រោយបំផុត</h3>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left border-collapse">
+                    <thead>
+                      <tr class="border-b border-slate-100 dark:border-slate-800 text-xs text-slate-400 font-medium pb-2">
+                        <th class="pb-3">កូដវិក្កយបត្រ</th>
+                        <th class="pb-3">កាលបរិច្ឆេទ</th>
+                        <th class="pb-3 text-right">ចំនួនទំនិញ</th>
+                        <th class="pb-3 text-right">តម្លៃសរុប</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-xs text-slate-600 dark:text-slate-300" id="recent-sales-table">
+                      <!-- Populated dynamically -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ==================== 2. PRODUCT MANAGEMENT VIEW ==================== -->
+          <div id="section-products" class="space-y-6 hidden">
+            <!-- Header Buttons & Filter Bar -->
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <!-- Search box -->
+              <div class="relative max-w-md w-full">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </span>
+                <input type="text" id="search-product-input" oninput="filterAndSearchProducts()" class="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm" placeholder="ស្វែងរកតាមឈ្មោះ, លេខបាកូដ...">
+              </div>
+
+              <!-- Filter Selector & Add Button -->
+              <div class="flex items-center gap-3 self-end md:self-auto">
+                <select id="filter-product-category" onchange="filterAndSearchProducts()" class="py-2 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-600 dark:text-slate-300 focus:outline-none">
+                  <option value="">ក្រុមទំនិញទាំងអស់</option>
+                  <!-- Populated dynamic -->
+                </select>
+
+                <button onclick="openProductModal()" class="py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition duration-150 flex items-center gap-2">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  <span>បន្ថែមទំនិញ</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Products List Table View -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-slate-50 dark:bg-slate-850 border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-500 uppercase">
+                      <th class="px-6 py-4">កូដទំនិញ / រូប</th>
+                      <th class="px-6 py-4">ឈ្មោះ (Eng / ខ្មែរ)</th>
+                      <th class="px-6 py-4">ក្រុមទំនិញ</th>
+                      <th class="px-6 py-4 text-right">ថ្លៃដើម (Cost)</th>
+                      <th class="px-6 py-4 text-right">តម្លៃលក់ (Price)</th>
+                      <th class="px-6 py-4 text-center">ស្តុក</th>
+                      <th class="px-6 py-4 text-right">សកម្មភាព</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm" id="products-table-body">
+                    <!-- Dynamic Rows -->
+                  </tbody>
+                </table>
+              </div>
+              
+              <!-- Pagination / Stats footer -->
+              <div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
+                <span id="product-pagination-info">បង្ហាញ 0 នៃ 0 ទំនិញ</span>
+                <div class="flex items-center gap-1">
+                  <button id="btn-prod-prev" onclick="changeProductPage(-1)" class="p-1.5 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg text-slate-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  </button>
+                  <button id="btn-prod-next" onclick="changeProductPage(1)" class="p-1.5 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg text-slate-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ==================== 3. CATEGORY MANAGEMENT VIEW ==================== -->
+          <div id="section-categories" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <!-- Add Category Form -->
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm h-fit space-y-4">
+                <h3 class="text-sm font-bold text-slate-800 dark:text-white" id="category-form-title">បង្កើតក្រុមទំនិញថ្មី</h3>
+                <form id="category-form" onsubmit="saveCategory(event)" class="space-y-4">
+                  <input type="hidden" id="category-id-edit">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-2">ឈ្មោះក្រុមទំនិញ (Category Name)</label>
+                    <input type="text" id="category-name-input" required class="w-full px-4 py-2.5 bg-slate-55 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none" placeholder="ឧ. ភេសជ្ជៈ ឬ Beverage">
+                  </div>
+                  
+                  <div class="flex items-center gap-2 pt-2">
+                    <button type="submit" class="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition">
+                      រក្សាទុក
+                    </button>
+                    <button type="button" onclick="resetCategoryForm()" class="py-2.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 rounded-xl text-sm transition">
+                      សម្អាត
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Categories Listing Grid -->
+              <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left border-collapse">
+                    <thead>
+                      <tr class="bg-slate-50 dark:bg-slate-850 border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-500 uppercase">
+                        <th class="px-6 py-4">អត្តសញ្ញាណ (ID)</th>
+                        <th class="px-6 py-4">ឈ្មោះក្រុមទំនិញ</th>
+                        <th class="px-6 py-4 text-right">សកម្មភាព</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm" id="categories-table-body">
+                      <!-- Dynamic rows -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ==================== 4. SUPPLIER MANAGEMENT VIEW ==================== -->
+          <div id="section-suppliers" class="space-y-6 hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <!-- Add/Edit Supplier Form -->
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm h-fit space-y-4">
+                <h3 class="text-sm font-bold text-slate-800 dark:text-white" id="supplier-form-title font-bold">បញ្ចូលព័ត៌មានដៃគូផ្គត់ផ្គង់</h3>
+                <form id="supplier-form" onsubmit="saveSupplier(event)" class="space-y-4">
+                  <input type="hidden" id="supplier-id-edit">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">ឈ្មោះដៃគូផ្គត់ផ្គង់</label>
+                    <input type="text" id="supplier-name" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="ឧ. ភេសជ្ជៈ ភ្នំពេញ ឯ.ក">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">លេខទូរស័ព្ទ</label>
+                    <input type="text" id="supplier-phone" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="ឧ. 012 345 678">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">អ៊ីមែល (បើមាន)</label>
+                    <input type="email" id="supplier-email" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="ឧ. supplier@mail.com">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">អាសយដ្ឋាន</label>
+                    <input type="text" id="supplier-address" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="ឧ. ផ្លូវ ១០៥ សង្កាត់បឹងកេងកង">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">កំណត់សម្គាល់បន្ថែម</label>
+                    <textarea id="supplier-notes" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none" rows="2" placeholder="ព័ត៌មានលម្អិត..."></textarea>
+                  </div>
+                  
+                  <div class="flex items-center gap-2 pt-2">
+                    <button type="submit" class="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition">
+                      រក្សាទុកព័ត៌មាន
+                    </button>
+                    <button type="button" onclick="resetSupplierForm()" class="py-2.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 rounded-xl text-sm transition">
+                      សម្អាត
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Suppliers Table Grid -->
+              <div class="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left border-collapse">
+                    <thead>
+                      <tr class="bg-slate-50 dark:bg-slate-850 border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-500 uppercase">
+                        <th class="px-6 py-4">ឈ្មោះដៃគូ</th>
+                        <th class="px-6 py-4">លេខទូរស័ព្ទ / អ៊ីមែល</th>
+                        <th class="px-6 py-4">អាសយដ្ឋាន</th>
+                        <th class="px-6 py-4 text-right">សកម្មភាព</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm" id="suppliers-table-body">
+                      <!-- Dynamic Suppliers Rows -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ==================== 5. STOCK MANAGEMENT VIEW ==================== -->
+          <div id="section-stock" class="space-y-6 hidden">
+            <!-- Stock Page Layout with sub-tabs -->
+            <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-px">
+              <button onclick="switchStockSubTab('stock-in')" id="subtab-stock-in" class="py-2.5 px-4 text-sm font-semibold border-b-2 border-blue-600 text-blue-600 transition">នាំចូលស្តុក (Stock In)</button>
+              <button onclick="switchStockSubTab('stock-out')" id="subtab-stock-out" class="py-2.5 px-4 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-white transition">នាំចេញស្តុក (Stock Out)</button>
+              <button onclick="switchStockSubTab('stock-adjust')" id="subtab-stock-adjust" class="py-2.5 px-4 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-white transition">កែសម្រួលស្តុក (Adjust Stock)</button>
+              <button onclick="switchStockSubTab('stock-history')" id="subtab-stock-history" class="py-2.5 px-4 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-white transition">ប្រវត្តិនៃការផ្លាស់ប្តូរ</button>
+            </div>
+
+            <!-- Sub Section Containers -->
+            <div id="stock-view-body" class="pt-2">
+              
+              <!-- 5.1 STOCK IN SUB PANEL -->
+              <div id="panel-stock-in" class="space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <!-- Stock In Action Form -->
+                  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm h-fit space-y-4">
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-white">ទម្រង់បញ្ចូលស្តុកថ្មី</h3>
+                    <form onsubmit="handleStockTransaction(event, 'in')" class="space-y-4">
+                      <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">ជ្រើសរើសទំនិញ</label>
+                        <select id="stock-in-product" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                          <option value="">-- ជ្រើសរើសទំនិញ --</option>
+                        </select>
+                      </div>
+                      <div class="grid grid-cols-2 gap-4">
+                        <div>
+                          <label class="block text-xs font-semibold text-slate-400 mb-1.5">ចំនួនបញ្ចូល</label>
+                          <input type="number" id="stock-in-qty" required min="1" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                          <label class="block text-xs font-semibold text-slate-400 mb-1.5">ថ្លៃដើម/ឯកតា ($)</label>
+                          <input type="number" step="0.01" id="stock-in-cost" required min="0" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">អ្នកផ្គត់ផ្គង់ (Supplier)</label>
+                        <select id="stock-in-supplier" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                          <option value="">-- ជ្រើសរើសអ្នកផ្គត់ផ្គង់ --</option>
+                        </select>
+                      </div>
+                      <button type="submit" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm transition">
+                        បញ្ជាក់ការនាំចូល
+                      </button>
+                    </form>
+                  </div>
+                  
+                  <!-- Explanatory note -->
+                  <div class="lg:col-span-2 bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                      <h4 class="font-bold text-blue-800 dark:text-blue-400 text-sm mb-2">គោលការណ៍ការនាំចូលទំនិញ (Stock In Policy)</h4>
+                      <p class="text-xs text-blue-700 dark:text-blue-300 leading-relaxed mb-4">
+                        រាល់ការនាំចូលទំនិញថ្មី នឹងត្រូវធ្វើបច្ចុប្បន្នភាពលើប្រព័ន្ធស្តុកក្នុងពេលជាក់ស្តែង (Real-time update)។ 
+                        ថ្លៃដើមទំនិញដែលបានកំណត់នៅទីនេះ នឹងត្រូវបានប្រើប្រាស់ដើម្បីគណនាប្រាក់ចំណេញនៅក្នុងរបាយការណ៍លក់។
+                      </p>
+                    </div>
+                    <div class="text-xs text-blue-500">គាំទ្រការទាញយកប្រវត្តិនៃការផ្លាស់ប្តូរស្តុកសរុប។</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 5.2 STOCK OUT SUB PANEL -->
+              <div id="panel-stock-out" class="space-y-6 hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <!-- Stock Out Action Form -->
+                  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm h-fit space-y-4">
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-white">ទម្រង់នាំចេញស្តុក</h3>
+                    <form onsubmit="handleStockTransaction(event, 'out')" class="space-y-4">
+                      <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">ជ្រើសរើសទំនិញ</label>
+                        <select id="stock-out-product" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                          <option value="">-- ជ្រើសរើសទំនិញ --</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">ចំនួននាំចេញ</label>
+                        <input type="number" id="stock-out-qty" required min="1" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                      </div>
+                      <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">មូលហេតុនៃការនាំចេញ</label>
+                        <input type="text" id="stock-out-note" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="ឧ. ទំនិញខូចខាត ឬ ហួសកាលកំណត់">
+                      </div>
+                      <button type="submit" class="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white font-semibold rounded-xl text-sm transition">
+                        បញ្ជាក់ការនាំចេញ
+                      </button>
+                    </form>
+                  </div>
+                  
+                  <div class="lg:col-span-2 bg-rose-50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                      <h4 class="font-bold text-rose-800 dark:text-rose-400 text-sm mb-2">ច្បាប់នាំចេញស្តុក (Stock Out Policy)</h4>
+                      <p class="text-xs text-rose-700 dark:text-rose-300 leading-relaxed mb-4">
+                        ប្រព័ន្ធនឹងមិនអនុញ្ញាតឱ្យមានការនាំចេញដែលនាំឱ្យចំនួនស្តុកមានតម្លៃអវិជ្ជមានឡើយ (Negative stock protection)។ 
+                        សូមពិនិត្យស្ថានភាពស្តុកជាក់ស្តែងឱ្យបានត្រឹមត្រូវមុនពេលនាំចេញ។
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 5.3 STOCK ADJUSTMENT SUB PANEL -->
+              <div id="panel-stock-adjust" class="space-y-6 hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <!-- Stock Adjust Action Form -->
+                  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm h-fit space-y-4">
+                    <h3 class="text-sm font-bold text-slate-800 dark:text-white">ទម្រង់កែសម្រួលស្តុកផ្ទាល់</h3>
+                    <form onsubmit="handleStockTransaction(event, 'adjust')" class="space-y-4">
+                      <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">ជ្រើសរើសទំនិញ</label>
+                        <select id="stock-adjust-product" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                          <option value="">-- ជ្រើសរើសទំនិញ --</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">ចំនួនស្តុកពិតប្រាកដក្នុងដៃ</label>
+                        <input type="number" id="stock-adjust-qty" required min="0" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="ឧ. បញ្ចូលចំនួនដែលទើបរាប់ឃើញ">
+                      </div>
+                      <div>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1.5">មូលហេតុនៃការកែប្រែ</label>
+                        <input type="text" id="stock-adjust-note" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="ឧ. រាប់ស្តុកប្រចាំត្រីមាស">
+                      </div>
+                      <button type="submit" class="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl text-sm transition font-bold">
+                        ធ្វើបច្ចុប្បន្នភាពស្តុកភ្លាមៗ
+                      </button>
+                    </form>
+                  </div>
+                  
+                  <div class="lg:col-span-2 bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30 p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                      <h4 class="font-bold text-amber-800 dark:text-amber-400 text-sm mb-2">ការកែសម្រួលស្តុកដោយផ្ទាល់ (Stock Adjustment)</h4>
+                      <p class="text-xs text-amber-700 dark:text-amber-300 leading-relaxed mb-4">
+                        សូមប្រើប្រាស់ជម្រើសនេះក្នុងករណីមានភាពមិនស៊ីគ្នារវាងទិន្នន័យលើប្រព័ន្ធ និងចំនួនផលិតផលពិតប្រាកដនៅក្នុងឃ្លាំង។
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 5.4 STOCK TRANSACTION HISTORY -->
+              <div id="panel-stock-history" class="hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left border-collapse">
+                    <thead>
+                      <tr class="bg-slate-50 dark:bg-slate-850 border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-500 uppercase">
+                        <th class="px-6 py-4">កាលបរិច្ឆេទ</th>
+                        <th class="px-6 py-4">ឈ្មោះទំនិញ</th>
+                        <th class="px-6 py-4">ប្រភេទប្រតិបត្តិការ</th>
+                        <th class="px-6 py-4 text-center">ចំនួន (Qty)</th>
+                        <th class="px-6 py-4">កំណត់សម្គាល់</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm" id="stock-history-table-body">
+                      <!-- Dynamic Historical Rows -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ==================== 6. POS SALES SYSTEM VIEW ==================== -->
+          <div id="section-pos" class="h-full hidden">
+            <!-- Full Split POS Grid Layout -->
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 h-full items-start">
+              
+              <!-- 6.1 Products Catalogs Section (2 Columns width) -->
+              <div class="xl:col-span-2 flex flex-col gap-4">
+                <!-- Search & Fast Barcode entry in POS -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="relative md:col-span-2">
+                    <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                    </span>
+                    <input type="text" id="pos-search-input" oninput="filterPOSProducts()" class="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-1 focus:ring-blue-500" placeholder="វាយឈ្មោះទំនិញ ឬកូដបាកូដរហ័ស...">
+                  </div>
+                  <!-- Category Fast Selector -->
+                  <div>
+                    <select id="pos-category-select" onchange="filterPOSProducts()" class="w-full py-2.5 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none">
+                      <option value="">ក្រុមទំនិញទាំងអស់</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Products POS Cards list -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 overflow-y-auto max-h-[calc(100vh-280px)] pr-2" id="pos-products-grid">
+                  <!-- Generated dynamic products clickable cards -->
+                </div>
+              </div>
+
+              <!-- 6.2 Active Shopping Cart Panel -->
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-lg flex flex-col h-[calc(100vh-190px)]">
+                <!-- Cart Header -->
+                <div class="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                  <h3 class="font-bold text-sm text-slate-800 dark:text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                    <span>កន្ត្រកទំនិញលក់</span>
+                  </h3>
+                  <button onclick="clearPOSCart()" class="text-xs text-rose-500 hover:underline">សម្អាតទាំងអស់</button>
+                </div>
+
+                <!-- Cart Items List container -->
+                <div class="flex-1 overflow-y-auto p-4 space-y-3" id="pos-cart-container">
+                  <div class="h-full flex flex-col items-center justify-center text-slate-400 gap-3">
+                    <svg class="w-12 h-12 stroke-slate-300 dark:stroke-slate-700" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                    <span class="text-xs">កន្ត្រកទំនេរ</span>
+                  </div>
+                </div>
+
+                <!-- Receipt calculations & Payments triggers -->
+                <div class="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 space-y-4">
+                  <div class="space-y-1.5 text-xs text-slate-500 dark:text-slate-400">
+                    <div class="flex justify-between">
+                      <span>តម្លៃសរុប (Subtotal):</span>
+                      <span id="pos-subtotal">$0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span>បញ្ចុះតម្លៃ (Discount):</span>
+                      <div class="flex items-center gap-1">
+                        <input type="number" id="pos-discount-input" oninput="recalculateCart()" min="0" max="100" class="w-12 text-right py-0.5 px-1 border border-slate-200 dark:border-slate-800 rounded bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-white" value="0">
+                        <span>%</span>
+                      </div>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span>ពន្ធអាករ (Tax):</span>
+                      <div class="flex items-center gap-1">
+                        <input type="number" id="pos-tax-input" oninput="recalculateCart()" min="0" max="100" class="w-12 text-right py-0.5 px-1 border border-slate-200 dark:border-slate-800 rounded bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-white" value="0">
+                        <span>%</span>
+                      </div>
+                    </div>
+                    <div class="border-t border-dashed border-slate-200 dark:border-slate-800 pt-1.5 flex justify-between font-bold text-sm text-slate-800 dark:text-white">
+                      <span>សរុបរួម (Total):</span>
+                      <span class="text-blue-600 dark:text-blue-400" id="pos-grand-total">$0.00</span>
+                    </div>
+                    <div class="flex justify-between text-[11px] text-teal-600 dark:text-teal-400 font-bold" id="pos-exchange-khr">
+                      <span>ជាប្រាក់រៀល (KHR):</span>
+                      <span>៛ 0</span>
+                    </div>
+                  </div>
+
+                  <!-- Checkout actions -->
+                  <div class="grid grid-cols-2 gap-3 pt-1">
+                    <button onclick="triggerPaymentModal('cash')" class="py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs transition flex flex-col items-center justify-center gap-1">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                      <span>បង់ប្រាក់ផ្ទាល់ (Cash)</span>
+                    </button>
+                    <button onclick="triggerPaymentModal('qr')" class="py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-xs transition flex flex-col items-center justify-center gap-1">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M4 8h16M4 16h16" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                      <span>ស្កែន QR Code</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ==================== 7. REPORTS VIEW ==================== -->
+          <div id="section-reports" class="space-y-6 hidden">
+            <!-- Filter Options for Export generation -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm space-y-4">
+              <h3 class="text-sm font-bold text-slate-800 dark:text-white">ទម្រង់បង្កើតរបាយការណ៍</h3>
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-400 mb-1.5">ប្រភេទរបាយការណ៍</label>
+                  <select id="report-type-select" class="w-full py-2 px-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none">
+                    <option value="sales">របាយការណ៍លក់ (Sales Report)</option>
+                    <option value="stock">របាយការណ៍ស្តុកក្នុងដៃ (Stock Level)</option>
+                    <option value="movement">របាយការណ៍ចរន្តស្តុក (Stock Movement)</option>
+                    <option value="profit">របាយការណ៍ប្រាក់ចំណេញ (Profit Report)</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-400 mb-1.5 font-bold">កាលបរិច្ឆេទចាប់ផ្តើម</label>
+                  <input type="date" id="report-date-start" class="w-full py-2 px-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-400 mb-1.5 font-bold">កាលបរិច្ឆេទបញ្ចប់</label>
+                  <input type="date" id="report-date-end" class="w-full py-2 px-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none">
+                </div>
+                <div class="flex items-center gap-2">
+                  <button onclick="generateReportData()" class="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-xs transition">
+                    ទាញយកទិន្នន័យ
+                  </button>
+                  <button onclick="exportReportData('csv')" class="p-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition" title="Export to CSV">
+                    CSV
+                  </button>
+                  <button onclick="exportReportData('pdf')" class="p-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl transition" title="Print to PDF">
+                    PDF
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Report output listing -->
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden" id="report-output-card">
+              <div class="p-4 bg-slate-50 dark:bg-slate-850 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <h4 class="font-bold text-xs text-slate-500 uppercase tracking-wider" id="report-table-title">លទ្ធផលរបាយការណ៍</h4>
+                <span class="text-xs text-slate-400" id="report-rows-count">0 record</span>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse" id="report-results-table">
+                  <thead>
+                    <tr class="border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-500">
+                      <th class="px-6 py-4">គ្មានការស្វែងរក</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-sm" id="report-results-body">
+                    <tr>
+                      <td class="px-6 py-8 text-center text-slate-400 text-xs">សូមជ្រើសរើសប្រភេទរបាយការណ៍ខាងលើដើម្បីទាញយក</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- ==================== 8. SETTINGS VIEW ==================== -->
+          <div id="section-settings" class="space-y-6 hidden">
+            <!-- Settings Multi-Panel Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              <!-- Shop Info Section -->
+              <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-sm space-y-4 lg:col-span-2">
+                <h3 class="font-bold text-sm text-slate-800 dark:text-white border-b border-slate-100 dark:border-slate-800 pb-3">ព័ត៌មានហាង & ការកំណត់រូបិយវត្ថុ</h3>
+                <form id="settings-shop-form" onsubmit="saveShopSettings(event)" class="space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-400 mb-1.5">ឈ្មោះហាងលក់</label>
+                      <input type="text" id="settings-shop-name" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-400 mb-1.5">លេខទូរស័ព្ទទំនាក់ទំនង</label>
+                      <input type="text" id="settings-shop-phone" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1.5">អាសយដ្ឋានហាង</label>
+                    <input type="text" id="settings-shop-address" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-400 mb-1.5">រូបិយប័ណ្ណលំនាំដើម</label>
+                      <select id="settings-shop-currency" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none">
+                        <option value="USD">USD ($)</option>
+                        <option value="KHR">KHR (៛)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-400 mb-1.5">អត្រាប្តូរប្រាក់ (Exchange Rate)</label>
+                      <input type="number" id="settings-shop-rate" required min="1" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-semibold text-slate-400 mb-1.5">ឡូហ្គោហាង (URL ជំនួស)</label>
+                      <input type="text" id="settings-shop-logo" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="https://...">
+                    </div>
+                  </div>
+                  
+                  <button type="submit" class="py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition">
+                    រក្សាទុកការកំណត់
+                  </button>
+                </form>
+              </div>
+
+              <!-- Firebase Deployment Manual Guide Panel -->
+              <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-sm text-slate-300 space-y-4">
+                <h3 class="font-bold text-sm text-white border-b border-slate-800 pb-3 flex items-center gap-2">
+                  <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-linecap="round" stroke-linejoin="round"></path><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  <span>ប្រព័ន្ធ & ការដំឡើង (Setup Manual)</span>
+                </h3>
+                <div class="space-y-2.5 text-xs">
+                  <p class="leading-relaxed">
+                    គម្រោងនេះដំណើរការលើ <strong class="text-cyan-400">Firebase v10 Modular SDK</strong>។ ខាងក្រោមជាកូដច្បាប់សុវត្ថិភាពសម្រាប់ការដាក់ឱ្យប្រើប្រាស់៖
+                  </p>
+                  <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 relative">
+                    <span class="text-[10px] text-slate-500 absolute top-1 right-2 uppercase">Firestore Rules</span>
+                    <pre class="overflow-x-auto text-[10px] text-emerald-400 font-mono mt-2 select-all whitespace-pre-wrap">
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /artifacts/{appId}/public/data/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}</pre>
+                  </div>
+                  <div class="bg-slate-950/40 p-3 border border-slate-800 rounded-xl space-y-1">
+                    <span class="text-white font-semibold">GitHub Pages Deploy:</span>
+                    <p class="text-[10px] text-slate-400 leading-relaxed">
+                      គ្រាន់តែទាញយកឯកសារ <code class="text-teal-400">index.html</code> នេះរួចដាក់ឈ្មោះវាថា <code class="text-teal-400">index.html</code> ក្នុង GitHub repository របស់អ្នក ហើយបើកការកំណត់ GitHub Pages ជាការស្រេច។
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </main>
+
+    </div>
+
+  </div>
+
+  <!-- ==================== DIALOGS & MODALS WRAPPER ==================== -->
+  
+  <!-- 1. PRODUCT ADD/EDIT MODAL -->
+  <div id="modal-product" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl relative">
+      <button onclick="closeProductModal()" class="absolute top-4 right-4 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      </button>
+
+      <h3 class="text-base font-bold text-slate-850 dark:text-white" id="modal-product-title">បញ្ចូលទំនិញថ្មី</h3>
+      <form id="product-form" onsubmit="saveProduct(event)" class="space-y-4">
+        <input type="hidden" id="product-id-edit">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1.5">លេខបាកូដទំនិញ (Barcode)</label>
+            <input type="text" id="prod-barcode" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="ឧ. 88412345678">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1.5">ឈ្មោះផលិតផល (English)</label>
+            <input type="text" id="prod-name" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="ឧ. Coca Cola Can 330ml">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1.5 font-bold">ឈ្មោះផលិតផលជាខ្មែរ</label>
+            <input type="text" id="prod-name-kh" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="ឧ. ទឹកក្រូចកូកាកូឡា កំប៉ុង">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1.5">ក្រុមទំនិញ</label>
+            <select id="prod-category" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none">
+              <option value="">-- ជ្រើសរើសក្រុមទំនិញ --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1.5">តម្លៃដើម (Cost Price)</label>
+            <input type="number" step="0.01" id="prod-cost" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1.5">តម្លៃលក់ចេញ (Selling Price)</label>
+            <input type="number" step="0.01" id="prod-price" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1.5">ចំនួនស្តុក (Quantity)</label>
+            <input type="number" id="prod-qty" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1.5">ឯកតាលក់ (Unit)</label>
+            <input type="text" id="prod-unit" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="ឧ. កំប៉ុង, ដប, កេស">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1.5">ដៃគូផ្គត់ផ្គង់ (Supplier)</label>
+            <select id="prod-supplier" required class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:outline-none">
+              <option value="">-- ជ្រើសរើសដៃគូ --</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1.5">តំណភ្ជាប់រូបភាពផលិតផល (Image URL)</label>
+            <input type="text" id="prod-image" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none" placeholder="https://...">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1.5">កំណត់សម្គាល់ (Description)</label>
+            <input type="text" id="prod-desc" class="w-full px-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3">
+          <button type="button" onclick="closeProductModal()" class="py-2.5 px-5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 rounded-xl text-sm font-semibold transition">
+            បោះបង់
+          </button>
+          <button type="submit" class="py-2.5 px-5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition">
+            រក្សាទុកទិន្នន័យ
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. PRODUCT DETAIL MODAL -->
+  <div id="modal-product-detail" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
+      <button onclick="closeProductDetailModal()" class="absolute top-4 right-4 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      </button>
+
+      <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wide">ព័ត៌មានលម្អិតពីទំនិញ</h3>
+      
+      <div class="flex flex-col items-center gap-3 py-4">
+        <img id="detail-prod-image" class="w-32 h-32 object-cover rounded-2xl border border-slate-150 dark:border-slate-850" src="" onerror="this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=120'">
+        <h2 class="text-lg font-bold dark:text-white" id="detail-prod-name">--</h2>
+        <span class="text-xs bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 px-3 py-1 rounded-full font-bold" id="detail-prod-barcode">--</span>
+      </div>
+
+      <div class="space-y-2 text-xs border-t border-slate-100 dark:border-slate-800 pt-3">
+        <div class="flex justify-between py-1 border-b border-slate-50 dark:border-slate-850/50">
+          <span class="text-slate-400">ឈ្មោះខ្មែរ:</span>
+          <span class="font-bold dark:text-white" id="detail-prod-khmer">--</span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-slate-50 dark:border-slate-850/50">
+          <span class="text-slate-400">ក្រុមទំនិញ:</span>
+          <span class="font-bold dark:text-white" id="detail-prod-category">--</span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-slate-50 dark:border-slate-850/50">
+          <span class="text-slate-400">ថ្លៃដើមផលិតផល:</span>
+          <span class="font-bold text-slate-600 dark:text-white" id="detail-prod-cost">--</span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-slate-50 dark:border-slate-850/50">
+          <span class="text-slate-400">តម្លៃលក់ចេញ:</span>
+          <span class="font-bold text-blue-600 dark:text-blue-400" id="detail-prod-price">--</span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-slate-50 dark:border-slate-850/50">
+          <span class="text-slate-400">ស្តុកបច្ចុប្បន្ន:</span>
+          <span class="font-bold text-amber-500" id="detail-prod-qty">--</span>
+        </div>
+        <div class="flex justify-between py-1 border-b border-slate-50 dark:border-slate-850/50">
+          <span class="text-slate-400">អ្នកផ្គត់ផ្គង់:</span>
+          <span class="font-semibold dark:text-white" id="detail-prod-supplier">--</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. LOW STOCK NOTIFICATIONS DIALOG MODAL -->
+  <div id="modal-low-stock" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl relative">
+      <button onclick="closeLowStockModal()" class="absolute top-4 right-4 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      </button>
+
+      <h3 class="text-sm font-bold text-amber-500 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <span>ទំនិញជិតអស់ពីស្តុក (&lt; 10)</span>
+      </h3>
+      
+      <div class="max-h-60 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800" id="low-stock-modal-list">
+        <!-- populated dynamic -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. ACTIVE PAYMENT METHOD SELECTION & CHANGE DIALOG -->
+  <div id="modal-payment" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
+      <button onclick="closePaymentModal()" class="absolute top-4 right-4 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-500">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      </button>
+
+      <h3 class="text-base font-bold text-slate-850 dark:text-white" id="payment-modal-title">ការទូទាត់ប្រាក់</h3>
+      
+      <!-- Checkout Info banner -->
+      <div class="p-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 rounded-xl space-y-2">
+        <div class="flex justify-between text-xs text-slate-500">
+          <span>សរុបសរុប:</span>
+          <span class="font-bold text-sm text-slate-800 dark:text-white" id="pay-total-usd">$0.00</span>
+        </div>
+        <div class="flex justify-between text-xs text-slate-500">
+          <span>ជាប្រាក់រៀល:</span>
+          <span class="font-bold text-sm text-teal-600" id="pay-total-khr">៛ 0</span>
+        </div>
+      </div>
+
+      <!-- Main Payment input forms (Dynamic switch) -->
+      <div id="pay-cash-inputs" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1.5 font-bold">ទទួលបានជាប្រាក់ដុល្លារ ($)</label>
+          <input type="number" step="0.01" id="pay-cash-usd-received" oninput="calculateChange()" class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-lg font-bold text-slate-900 dark:text-white outline-none focus:ring-1 focus:ring-emerald-500">
+        </div>
+        <div class="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl flex justify-between items-center text-xs">
+          <span class="text-slate-400 font-semibold">ប្រាក់អាប់ត្រូវសង៖</span>
+          <span class="text-base font-bold text-emerald-500" id="pay-change-returned">$0.00 / ៛0</span>
+        </div>
+      </div>
+
+      <div id="pay-qr-display" class="hidden flex flex-col items-center justify-center space-y-3 p-4">
+        <!-- Mock KHQR Generator inside -->
+        <div class="p-3 bg-white border-2 border-dashed border-blue-500 rounded-2xl">
+          <svg class="w-48 h-48 text-blue-900" viewBox="0 0 100 100" fill="currentColor">
+            <path d="M5 5h30v30H5V5zm4 4v22h22V9H9zM15 15h10v10H15V15zm50-10h30v30H65V5zm4 4v22h22V9H69zm6 6h10v10H69V15zM5 65h30v30H5V65zm4 4v22h22V69H9zm6 6h10v10H15V75zm50-10h10v10H65V65zm10 10h10v10H75V75zm10-10h10v10H85V65zm-10-10h10v10H75V55zm10 0h10v10H85V55zm-30 0h10v10H55V55zm0 10h10v10H55V65zm10 20h10v10H65V85zm10 0h10v10H75V85zm10 0h10v10H85V85zM45 45h10v10H45V45z"/>
+          </svg>
+        </div>
+        <span class="text-xs text-blue-500 font-bold tracking-widest uppercase">KHQR - SCAN TO PAY</span>
+        <span class="text-[11px] text-slate-400">ស្កែនដើម្បីបង់ប្រាក់រហ័សតាមរយៈកម្មវិធីធនាគារនានា</span>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="flex gap-3">
+        <button onclick="closePaymentModal()" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 rounded-xl text-xs font-bold transition">
+          ត្រឡប់ក្រោយ
+        </button>
+        <button onclick="submitPOSSale()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-emerald-500/10">
+          បញ្ចប់ការលក់ & បោះពុម្ព
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. THERMAL RECEIPT 80MM OVERLAY & PRINT SIMULATION -->
+  <div id="modal-receipt" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white text-slate-900 p-6 rounded-2xl max-w-sm w-full space-y-4 shadow-2xl relative">
+      <button onclick="closeReceiptModal()" class="absolute top-4 right-4 p-1.5 hover:bg-slate-100 text-slate-500 rounded-lg print:hidden">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      </button>
+
+      <div class="overflow-y-auto max-h-[80vh] p-2 bg-slate-50 border border-slate-100 rounded-xl print:bg-white print:border-0">
+        <!-- 80mm Print Layout container -->
+        <div id="thermal-receipt" class="mx-auto bg-white p-4 text-xs font-mono" style="width: 76mm; font-family: monospace;">
+          <div class="text-center space-y-1 mb-4">
+            <h2 class="font-bold text-sm tracking-wide" id="receipt-shop-name">Smart Inventory Pro</h2>
+            <p class="text-[10px]" id="receipt-shop-address">អាសយដ្ឋាន៖ រាជធានីភ្នំពេញ</p>
+            <p class="text-[10px]" id="receipt-shop-phone">ទូរស័ព្ទ៖ 012 345 678</p>
+            <div class="border-b border-dashed border-slate-400 my-2"></div>
+            <h3 class="font-bold text-[11px] uppercase tracking-wider">វិក្កយបត្រ / Sales Receipt</h3>
+          </div>
+          
+          <div class="space-y-1 text-[10px] mb-3">
+            <div class="flex justify-between">
+              <span>លេខវិក្កយបត្រ:</span>
+              <span id="receipt-id">INV-00000000</span>
+            </div>
+            <div class="flex justify-between">
+              <span>កាលបរិច្ឆេទ:</span>
+              <span id="receipt-date">--/--/---- --:--</span>
+            </div>
+            <div class="flex justify-between">
+              <span>អ្នកលក់:</span>
+              <span id="receipt-cashier">--</span>
+            </div>
+          </div>
+
+          <div class="border-b border-dashed border-slate-400 my-2"></div>
+          
+          <!-- Receipt items listing table -->
+          <table class="w-full text-left text-[10px] border-collapse mb-2">
+            <thead>
+              <tr class="font-bold border-b border-slate-300">
+                <th class="py-1">ទំនិញ</th>
+                <th class="text-center py-1">ចំនួន</th>
+                <th class="text-right py-1">តម្លៃ</th>
+              </tr>
+            </thead>
+            <tbody id="receipt-items-body" class="divide-y divide-slate-100">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+
+          <div class="border-b border-dashed border-slate-400 my-2"></div>
+
+          <div class="space-y-1 text-[10px] font-bold text-right">
+            <div class="flex justify-between">
+              <span>តម្លៃសរុប (Subtotal):</span>
+              <span id="receipt-subtotal">$0.00</span>
+            </div>
+            <div class="flex justify-between text-slate-500">
+              <span>បញ្ចុះតម្លៃ (Discount):</span>
+              <span id="receipt-discount">0%</span>
+            </div>
+            <div class="flex justify-between text-slate-500">
+              <span>ពន្ធ (Tax):</span>
+              <span id="receipt-tax">0%</span>
+            </div>
+            <div class="flex justify-between text-[11px] font-extrabold border-t border-slate-200 pt-1">
+              <span>សរុបរួម (Grand Total):</span>
+              <span id="receipt-grand-total">$0.00</span>
+            </div>
+            <div class="flex justify-between text-teal-600">
+              <span>សរុបជាប្រាក់រៀល:</span>
+              <span id="receipt-grand-total-khr">៛ 0</span>
+            </div>
+            <div class="flex justify-between border-t border-dashed border-slate-200 pt-1">
+              <span>ប្រាក់ទទួលបាន:</span>
+              <span id="receipt-received">$0.00</span>
+            </div>
+            <div class="flex justify-between">
+              <span>ប្រាក់អាប់:</span>
+              <span id="receipt-change">$0.00</span>
+            </div>
+          </div>
+
+          <div class="border-b border-dashed border-slate-400 my-2"></div>
+          <div class="text-center space-y-1 text-[9px] text-slate-500 mt-3">
+            <p class="font-bold">សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត</p>
+            <p>Thank you for shopping with us!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="flex gap-3 print:hidden">
+        <button onclick="closeReceiptModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-xs font-semibold text-slate-600 transition">
+          បិទព័ត៌មាន
+        </button>
+        <button onclick="printThermalReceipt()" class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 shadow-lg shadow-blue-500/10">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          <span>បោះពុម្ពវិក្កយបត្រ</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Alert Toast Toast notification element -->
+  <div id="toast-notif" class="fixed bottom-6 right-6 z-50 transform translate-y-10 opacity-0 pointer-events-none transition-all duration-300 bg-slate-900 border border-slate-800 text-white py-3 px-5 rounded-2xl flex items-center gap-3 shadow-2xl max-w-sm">
+    <div class="p-1 rounded-lg" id="toast-icon-bg">
+      <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" id="toast-icon-svg"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </div>
+    <div class="flex-1 text-xs font-semibold leading-relaxed" id="toast-message">ជោគជ័យ!</div>
+  </div>
+
+  <!-- ==================== SCRIPTS AND LOGICS ==================== -->
+  
+  <!-- Firebase JS Modular v10 scripts from standard gstatic CDN -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
+    import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, signOut, signInWithEmailAndPassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, query, onSnapshot, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore.js";
+
+    // Set fallback structures if runtime variables are not declared
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'smart-inventory-demo';
+    
+    // Fallback/Local Storage Simulation state object
+    // Active simulation if true (when firebase config is empty or absent)
+    let isOfflineSimulation = true;
+    let db, auth;
+
+    // Verify Firebase Configuration parameters availability
+    if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+      try {
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getFirestore(app);
+        isOfflineSimulation = false;
+        console.log("Firebase initialized successfully with credentials.");
+      } catch (e) {
+        console.error("Firebase Initialization Failed! Using simulated local storage driver.", e);
+      }
+    }
+
+    // ==================== IN-MEMORY APPLICATION STATE ====================
+    let state = {
+      currentUser: null,
+      currentView: 'login',
+      sidebarCollapsed: false,
+      isDarkMode: false,
+      products: [],
+      categories: [],
+      suppliers: [],
+      sales: [],
+      stockTransactions: [],
+      settings: {
+        shopName: "Smart POS Shop",
+        phone: "+855 12 345 678",
+        address: "ផ្ទះលេខ ១២៣ មហាវិថីព្រះមុនីវង្ស ភ្នំពេញ",
+        currency: "USD",
+        rate: 4100,
+        logo: ""
+      },
+      posCart: [],
+      productPage: 1,
+      productsPerPage: 10,
+      activeStockSubTab: 'stock-in',
+      activeReportData: [],
+      activeReportType: 'sales',
+    };
+
+    // ==================== MOCK DATA SEED GENERATION ====================
+    const mockCategories = [
+      { id: 'cat-1', name: 'ភេសជ្ជៈ (Beverages)' },
+      { id: 'cat-2', name: 'គ្រឿងសម្អាង (Cosmetics)' },
+      { id: 'cat-3', name: 'ម្ហូបអាហារ (Food)' },
+      { id: 'cat-4', name: 'គ្រឿងអេឡិចត្រូនិច (Electronics)' }
+    ];
+
+    const mockSuppliers = [
+      { id: 'sup-1', name: 'ភ្នំពេញ ឌីទ្រីប្យ៊ូសិន', phone: '012999888', email: 'pp-dist@gmail.com', address: 'BKK1, Phnom Penh' },
+      { id: 'sup-2', name: 'អង្គរ ត្រេឌីង', phone: '099555111', email: 'angkor-trading@gmail.com', address: 'Tuol Kouk, Phnom Penh' }
+    ];
+
+    const mockProducts = [
+      { id: 'prod-1', barcode: '88412345601', name: 'Coca Cola Can 330ml', khmerName: 'កូកាកូឡា កំប៉ុង', category: 'cat-1', costPrice: 0.35, sellingPrice: 0.50, quantity: 48, unit: 'កំប៉ុង', supplier: 'sup-1', image: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=120', description: 'Original taste' },
+      { id: 'prod-2', barcode: '88412345602', name: 'Angkor Beer Can 330ml', khmerName: 'ស្រាបៀរអង្គរ កំប៉ុង', category: 'cat-1', costPrice: 0.40, sellingPrice: 0.65, quantity: 8, unit: 'កំប៉ុង', supplier: 'sup-1', image: '', description: 'My country, my beer' },
+      { id: 'prod-3', barcode: '88412345603', name: 'Pringles Sour Cream 150g', khmerName: 'ដំឡូងកំប៉ុងព្រីងហ្គល', category: 'cat-3', costPrice: 1.20, sellingPrice: 1.80, quantity: 24, unit: 'កំប៉ុង', supplier: 'sup-2', image: '', description: 'Delicious chips' },
+      { id: 'prod-4', barcode: '88412345604', name: 'Shampoo Sunsilk Black 340ml', khmerName: 'ស៊ិនស៊ិក ខ្មៅ', category: 'cat-2', costPrice: 2.10, sellingPrice: 3.20, quantity: 5, unit: 'ដប', supplier: 'sup-2', image: '', description: 'Soft & shiny hair' }
+    ];
+
+    const mockSales = [
+      { id: 'sale-1', date: new Date().toISOString(), items: [{ productId: 'prod-1', name: 'Coca Cola Can 330ml', quantity: 2, price: 0.50, cost: 0.35 }], total: 1.00, profit: 0.30 },
+      { id: 'sale-2', date: new Date(Date.now() - 3600000*24).toISOString(), items: [{ productId: 'prod-3', name: 'Pringles Sour Cream 150g', quantity: 1, price: 1.80, cost: 1.20 }], total: 1.80, profit: 0.60 }
+    ];
+
+    // ==================== STORAGE CONTROLLER DIRECTIVES ====================
+    // Synchronize global states dynamically
+    function loadLocalState() {
+      if (localStorage.getItem('smart_pos_state')) {
+        const saved = JSON.parse(localStorage.getItem('smart_pos_state'));
+        state.products = saved.products || [];
+        state.categories = saved.categories || [];
+        state.suppliers = saved.suppliers || [];
+        state.sales = saved.sales || [];
+        state.stockTransactions = saved.stockTransactions || [];
+        state.settings = saved.settings || state.settings;
+      } else {
+        state.products = mockProducts;
+        state.categories = mockCategories;
+        state.suppliers = mockSuppliers;
+        state.sales = mockSales;
+        state.stockTransactions = [];
+        saveToLocalStorage();
+      }
+    }
+
+    function saveToLocalStorage() {
+      localStorage.setItem('smart_pos_state', JSON.stringify({
+        products: state.products,
+        categories: state.categories,
+        suppliers: state.suppliers,
+        sales: state.sales,
+        stockTransactions: state.stockTransactions,
+        settings: state.settings
+      }));
+    }
+
+    // Initialize state
+    if (isOfflineSimulation) {
+      loadLocalState();
+    }
+
+    // ==================== FIREBASE CLOUD CONTEXT SIGN-IN (RULE 3) ====================
+    const initCloudAuthAndData = async () => {
+      if (isOfflineSimulation) {
+        // Auto signin locally with mock user
+        const rem = localStorage.getItem('smart_pos_remembered_user');
+        if (rem) {
+          state.currentUser = JSON.parse(rem);
+          navigate('dashboard');
+        } else {
+          navigate('login');
+        }
+        return;
+      }
+
+      try {
+        // Sign-in logic
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        console.error("Authentication handshake failure, running standalone simulation fallback.", err);
+        isOfflineSimulation = true;
+        loadLocalState();
+      }
+    };
+
+    if (!isOfflineSimulation) {
+      onAuthStateChanged(auth, (user) => {
+        if (user) {
+          // Identify user from Auth context
+          let role = "Admin";
+          let name = user.email ? user.email.split('@')[0] : "អ្នកគ្រប់គ្រង";
+          if (user.email && user.email.includes("staff")) {
+            role = "Staff";
+          }
+          state.currentUser = { uid: user.uid, name: name, email: user.email || 'anonymous@domain.com', role: role };
+          
+          // Set up real-time Firebase listeners (RULE 1 & 2 compliant)
+          setupFirebaseSyncListeners();
+          navigate('dashboard');
+        } else {
+          state.currentUser = null;
+          navigate('login');
+        }
+      });
+    }
+
+    // ==================== REAL-TIME FIRESTORE DATA SYNCING ====================
+    function setupFirebaseSyncListeners() {
+      const paths = {
+        products: collection(db, 'artifacts', appId, 'public', 'data', 'products'),
+        categories: collection(db, 'artifacts', appId, 'public', 'data', 'categories'),
+        suppliers: collection(db, 'artifacts', appId, 'public', 'data', 'suppliers'),
+        sales: collection(db, 'artifacts', appId, 'public', 'data', 'sales'),
+        stockTransactions: collection(db, 'artifacts', appId, 'public', 'data', 'stockTransactions'),
+        settings: collection(db, 'artifacts', appId, 'public', 'data', 'settings')
+      };
+
+      // Listeners
+      onSnapshot(paths.products, (snapshot) => {
+        state.products = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (state.products.length === 0) seedDatabase('products');
+        renderActiveView();
+        updateKPIWidgets();
+      }, (err) => console.log("Product Sync blocked or limited.", err));
+
+      onSnapshot(paths.categories, (snapshot) => {
+        state.categories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (state.categories.length === 0) seedDatabase('categories');
+        renderActiveView();
+      }, (err) => console.log("Category Sync limited.", err));
+
+      onSnapshot(paths.suppliers, (snapshot) => {
+        state.suppliers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (state.suppliers.length === 0) seedDatabase('suppliers');
+        renderActiveView();
+      }, (err) => console.log("Supplier Sync limited.", err));
+
+      onSnapshot(paths.sales, (snapshot) => {
+        state.sales = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (state.sales.length === 0) seedDatabase('sales');
+        renderActiveView();
+        updateKPIWidgets();
+      }, (err) => console.log("Sales Sync limited.", err));
+
+      onSnapshot(paths.stockTransactions, (snapshot) => {
+        state.stockTransactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderActiveView();
+      }, (err) => console.log("Transactions Sync limited.", err));
+
+      onSnapshot(paths.settings, (snapshot) => {
+        if (!snapshot.empty) {
+          state.settings = { id: snapshot.docs[0].id, ...snapshot.docs[0].data() };
+          applyStoreSettings();
+        } else {
+          // Upload default settings to FireStore
+          addDoc(paths.settings, state.settings);
+        }
+      }, (err) => console.log("Settings Sync limited.", err));
+    }
+
+    // Seed empty FireStore database with beautiful mocks
+    async function seedDatabase(type) {
+      const paths = {
+        products: collection(db, 'artifacts', appId, 'public', 'data', 'products'),
+        categories: collection(db, 'artifacts', appId, 'public', 'data', 'categories'),
+        suppliers: collection(db, 'artifacts', appId, 'public', 'data', 'suppliers'),
+        sales: collection(db, 'artifacts', appId, 'public', 'data', 'sales'),
+      };
+      if (type === 'categories') {
+        mockCategories.forEach(item => setDoc(doc(paths.categories, item.id), { name: item.name }));
+      }
+      if (type === 'suppliers') {
+        mockSuppliers.forEach(item => setDoc(doc(paths.suppliers, item.id), { name: item.name, phone: item.phone, email: item.email, address: item.address }));
+      }
+      if (type === 'products') {
+        mockProducts.forEach(item => setDoc(doc(paths.products, item.id), {
+          barcode: item.barcode, name: item.name, khmerName: item.khmerName,
+          category: item.category, costPrice: item.costPrice, sellingPrice: item.sellingPrice,
+          quantity: item.quantity, unit: item.unit, supplier: item.supplier, image: item.image, description: item.description
+        }));
+      }
+      if (type === 'sales') {
+        mockSales.forEach(item => setDoc(doc(paths.sales, item.id), { date: item.date, items: item.items, total: item.total, profit: item.profit }));
+      }
+    }
+
+    // ==================== ROUTING & MENUS BUILDERS ====================
+    const sidebarMenuItems = [
+      { id: 'dashboard', name: 'ផ្ទាំងគ្រប់គ្រង (Dashboard)', svg: '<path d="M4 5a1 1 0 011-1h3a1 1 0 011 1v12a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 10a1 1 0 011-1h3a1 1 0 011 1v2a1 1 0 01-1 1h-3a1 1 0 01-1-1v-2zm0-10a1 1 0 011-1h3a1 1 0 011 1v5a1 1 0 01-1 1h-3a1 1 0 01-1-1V5z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' },
+      { id: 'products', name: 'ទំនិញ (Products)', svg: '<path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' },
+      { id: 'categories', name: 'ក្រុមទំនិញ (Categories)', svg: '<path d="M4 6h16M4 12h16M4 18h7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' },
+      { id: 'suppliers', name: 'ដៃគូផ្គត់ផ្គង់ (Suppliers)', svg: '<path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' },
+      { id: 'stock', name: 'ឃ្លាំងទំនិញ (Stock)', svg: '<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' },
+      { id: 'pos', name: 'កន្លែងលក់ (POS System)', svg: '<path d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' },
+      { id: 'reports', name: 'របាយការណ៍ (Reports)', svg: '<path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' },
+      { id: 'settings', name: 'ការកំណត់ (Settings)', svg: '<path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' }
+    ];
+
+    function navigate(viewId) {
+      state.currentView = viewId;
+      
+      // Update sidebar active highlights
+      const links = document.querySelectorAll('.sidebar-nav-link');
+      links.forEach(link => {
+        if (link.getAttribute('data-view') === viewId) {
+          link.classList.add('bg-blue-600', 'text-white');
+          link.classList.remove('text-slate-400', 'hover:bg-slate-800');
+        } else {
+          link.classList.remove('bg-blue-600', 'text-white');
+          link.classList.add('text-slate-400', 'hover:bg-slate-800');
+        }
+      });
+
+      // Show/Hide page container views
+      const views = ['login', 'app'];
+      views.forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        if (v === 'login' && viewId === 'login') {
+          el.classList.remove('hidden');
+        } else if (v === 'app' && viewId !== 'login') {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      });
+
+      // Active sub-page components inside App area
+      const sections = ['dashboard', 'products', 'categories', 'suppliers', 'stock', 'pos', 'reports', 'settings'];
+      sections.forEach(sec => {
+        const el = document.getElementById(`section-${sec}`);
+        if (sec === viewId) {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      });
+
+      // Modify Page title dynamically
+      const activeMenuItem = sidebarMenuItems.find(i => i.id === viewId);
+      if (activeMenuItem) {
+        document.getElementById('current-view-title').textContent = activeMenuItem.name;
+      }
+
+      renderActiveView();
+    }
+
+    // Dynamic builders for Sidebar elements
+    function buildSidebarNavigation() {
+      const container = document.getElementById('sidebar-nav');
+      container.innerHTML = '';
+      sidebarMenuItems.forEach(item => {
+        const button = document.createElement('button');
+        button.className = "sidebar-nav-link w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-150 mb-1";
+        button.setAttribute('data-view', item.id);
+        button.innerHTML = `
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">${item.svg}</svg>
+          <span class="truncate">${item.name}</span>
+        `;
+        button.onclick = () => navigate(item.id);
+        container.appendChild(button);
+      });
+    }
+
+    // ==================== RENDERING DRIVER DIRECTIVES ====================
+    function renderActiveView() {
+      // General safety update for low stock warning
+      checkLowStockAlerts();
+
+      if (state.currentView === 'dashboard') {
+        renderDashboardView();
+      } else if (state.currentView === 'products') {
+        renderProductsView();
+      } else if (state.currentView === 'categories') {
+        renderCategoriesView();
+      } else if (state.currentView === 'suppliers') {
+        renderSuppliersView();
+      } else if (state.currentView === 'stock') {
+        renderStockView();
+      } else if (state.currentView === 'pos') {
+        renderPOSView();
+      } else if (state.currentView === 'reports') {
+        renderReportsView();
+      } else if (state.currentView === 'settings') {
+        renderSettingsView();
+      }
+    }
+
+    // Display Toast notification (Success/Error/Warning)
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast-notif');
+      const toastMsg = document.getElementById('toast-message');
+      const toastIconBg = document.getElementById('toast-icon-bg');
+      const toastIconSvg = document.getElementById('toast-icon-svg');
+
+      toastMsg.innerText = message;
+      if (type === 'success') {
+        toastIconBg.className = "p-1 rounded-lg bg-emerald-500/10";
+        toastIconSvg.innerHTML = '<path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>';
+        toastIconSvg.className.baseVal = "w-5 h-5 text-emerald-400";
+      } else {
+        toastIconBg.className = "p-1 rounded-lg bg-rose-500/10";
+        toastIconSvg.innerHTML = '<path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" stroke-linecap="round" stroke-linejoin="round"></path>';
+        toastIconSvg.className.baseVal = "w-5 h-5 text-rose-400";
+      }
+
+      toast.className = "fixed bottom-6 right-6 z-50 transform translate-y-0 opacity-100 pointer-events-auto transition-all duration-300 bg-slate-900 border border-slate-800 text-white py-3 px-5 rounded-2xl flex items-center gap-3 shadow-2xl max-w-sm";
+      setTimeout(() => {
+        toast.className = "fixed bottom-6 right-6 z-50 transform translate-y-10 opacity-0 pointer-events-none transition-all duration-300 bg-slate-900 border border-slate-800 text-white py-3 px-5 rounded-2xl flex items-center gap-3 shadow-2xl max-w-sm";
+      }, 3500);
+    }
+
+    // ==================== AUTHENTICATION ACTIONS ====================
+    window.handleLogin = async function(event) {
+      event.preventDefault();
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const remember = document.getElementById('login-remember').checked;
+      const alertEl = document.getElementById('login-alert');
+
+      if (isOfflineSimulation) {
+        // Mock direct login
+        if ((email === "admin@smart.com" || email === "staff@smart.com") && password === "123456") {
+          const role = email === "admin@smart.com" ? "Admin" : "Staff";
+          state.currentUser = { uid: "demo-user-123", name: email.split('@')[0], email: email, role: role };
+          if (remember) {
+            localStorage.setItem('smart_pos_remembered_user', JSON.stringify(state.currentUser));
+          }
+          alertEl.className = "mb-4 p-4 rounded-xl text-sm bg-emerald-500/10 text-emerald-400";
+          alertEl.innerText = "ចូលប្រព័ន្ធជោគជ័យ! កំពុងដំណើរការ...";
+          alertEl.classList.remove('hidden');
+          setTimeout(() => {
+            alertEl.classList.add('hidden');
+            navigate('dashboard');
+          }, 1000);
+        } else {
+          alertEl.className = "mb-4 p-4 rounded-xl text-sm bg-rose-500/10 text-rose-400";
+          alertEl.innerText = "រកមិនឃើញគណនី ឬលេខកូដខុស! (សាកល្បង៖ admin@smart.com លេខសម្ងាត់៖ 123456)";
+          alertEl.classList.remove('hidden');
+        }
+      } else {
+        // FireBase cloud login driver
+        try {
+          await signInWithEmailAndPassword(auth, email, password);
+        } catch (err) {
+          alertEl.className = "mb-4 p-4 rounded-xl text-sm bg-rose-500/10 text-rose-400";
+          alertEl.innerText = "ការចូលបរាជ័យ៖ " + err.message;
+          alertEl.classList.remove('hidden');
+        }
+      }
+    };
+
+    window.handleForgotPassword = async function() {
+      const email = document.getElementById('login-email').value.trim();
+      if (!email) {
+        showToast("សូមបញ្ចូលអ៊ីមែលជាមុនសិន ដើម្បីផ្ញើតំណភ្ជាប់!", "warning");
+        return;
+      }
+      if (isOfflineSimulation) {
+        showToast("មុខងារនេះមិនដំណើរការក្នុងរបៀបរត់សាកល្បងឡើយ!", "warning");
+      } else {
+        try {
+          await sendPasswordResetEmail(auth, email);
+          showToast("លិខិតប្តូរលេខកូដត្រូវបានផ្ញើទៅកាន់អ៊ីមែលរបស់អ្នកហើយ!", "success");
+        } catch (e) {
+          showToast(e.message, "warning");
+        }
+      }
+    };
+
+    window.handleLogout = async function() {
+      if (isOfflineSimulation) {
+        state.currentUser = null;
+        localStorage.removeItem('smart_pos_remembered_user');
+        navigate('login');
+      } else {
+        try {
+          await signOut(auth);
+          state.currentUser = null;
+          navigate('login');
+        } catch (err) {
+          showToast("ការចាកចេញមានកំហុស!", "warning");
+        }
+      }
+    };
+
+    // ==================== DASHBOARD RENDERS ====================
+    let salesProfitChartInstance = null;
+    
+    function renderDashboardView() {
+      updateKPIWidgets();
+
+      // Recent added products render
+      const recentProducts = [...state.products].reverse().slice(0, 5);
+      const recentProductsTbody = document.getElementById('recent-products-table');
+      recentProductsTbody.innerHTML = '';
+      
+      recentProducts.forEach(prod => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/40 transition duration-100";
+        const image = prod.image ? prod.image : 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=60';
+        tr.innerHTML = `
+          <td class="py-3 px-1"><img class="w-8 h-8 rounded-lg object-cover" src="${image}" onerror="this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=60'"></td>
+          <td class="py-3 font-semibold text-slate-850 dark:text-slate-200">${prod.name}<br><span class="text-[10px] text-slate-400">${prod.khmerName || ''}</span></td>
+          <td class="py-3 text-right font-bold text-slate-800 dark:text-white">$${prod.sellingPrice.toFixed(2)}</td>
+          <td class="py-3 text-right"><span class="px-2 py-0.5 rounded-full ${prod.quantity < 10 ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'} font-bold">${prod.quantity} ${prod.unit || 'pcs'}</span></td>
+        `;
+        recentProductsTbody.appendChild(tr);
+      });
+
+      // Recent Sales list render
+      const recentSales = [...state.sales].reverse().slice(0, 5);
+      const recentSalesTbody = document.getElementById('recent-sales-table');
+      recentSalesTbody.innerHTML = '';
+
+      recentSales.forEach(sale => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/40 transition duration-100";
+        const dateStr = new Date(sale.date).toLocaleDateString('km-KH');
+        const count = sale.items ? sale.items.reduce((acc, item) => acc + item.quantity, 0) : 0;
+        tr.innerHTML = `
+          <td class="py-3 font-bold text-blue-600 dark:text-blue-400">#${sale.id.slice(-6).toUpperCase()}</td>
+          <td class="py-3 text-slate-500">${dateStr}</td>
+          <td class="py-3 text-right text-slate-800 dark:text-slate-200">${count} មុខទំនិញ</td>
+          <td class="py-3 text-right font-extrabold text-emerald-500">$${sale.total.toFixed(2)}</td>
+        `;
+        recentSalesTbody.appendChild(tr);
+      });
+
+      // Render Top selling list
+      renderTopSellingList();
+
+      // Render charts
+      renderDashboardCharts();
+    }
+
+    function updateKPIWidgets() {
+      // Calculate KPIs
+      const totalProducts = state.products.length;
+      const totalCategories = state.categories.length;
+      const totalStock = state.products.reduce((acc, p) => acc + (parseInt(p.quantity) || 0), 0);
+      const stockValue = state.products.reduce((acc, p) => acc + ((parseFloat(p.costPrice) || 0) * (parseInt(p.quantity) || 0)), 0);
+      const totalSales = state.sales.reduce((acc, s) => acc + (parseFloat(s.total) || 0), 0);
+      const totalProfit = state.sales.reduce((acc, s) => acc + (parseFloat(s.profit) || 0), 0);
+
+      document.getElementById('kpi-total-products').innerText = totalProducts;
+      document.getElementById('kpi-categories-span').innerText = `${totalCategories} ក្រុមទំនិញ`;
+      document.getElementById('kpi-total-stock').innerText = totalStock;
+      document.getElementById('kpi-stock-value').innerText = `តម្លៃដើម៖ $${stockValue.toFixed(2)}`;
+      document.getElementById('kpi-total-sales').innerText = `$${totalSales.toFixed(2)}`;
+      document.getElementById('kpi-total-sales-count').innerText = `${state.sales.length} វិក្កយបត្រ`;
+      document.getElementById('kpi-total-profit').innerText = `$${totalProfit.toFixed(2)}`;
+    }
+
+    function renderTopSellingList() {
+      const topSellingContainer = document.getElementById('top-selling-list');
+      topSellingContainer.innerHTML = '';
+
+      // Aggregate sale quantities
+      const counts = {};
+      state.sales.forEach(sale => {
+        if (sale.items) {
+          sale.items.forEach(item => {
+            counts[item.productId] = (counts[item.productId] || 0) + item.quantity;
+          });
+        }
+      });
+
+      const sortedTop = Object.keys(counts).map(id => {
+        const prod = state.products.find(p => p.id === id);
+        return {
+          product: prod ? prod.name : 'Unknown Product',
+          khmerName: prod ? prod.khmerName : '',
+          qty: counts[id],
+          image: prod ? prod.image : ''
+        };
+      }).sort((a, b) => b.qty - a.qty).slice(0, 5);
+
+      if (sortedTop.length === 0) {
+        topSellingContainer.innerHTML = `<div class="text-center text-xs text-slate-400 py-12">គ្មានទិន្នន័យនៃការលក់នៅឡើយទេ</div>`;
+        return;
+      }
+
+      sortedTop.forEach(item => {
+        const div = document.createElement('div');
+        div.className = "flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition duration-150";
+        const img = item.image ? item.image : 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=60';
+        div.innerHTML = `
+          <div class="flex items-center gap-3">
+            <img class="w-9 h-9 rounded-xl object-cover" src="${img}" onerror="this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=60'">
+            <div>
+              <h4 class="text-xs font-bold dark:text-white leading-relaxed">${item.product}</h4>
+              <span class="text-[10px] text-slate-400">${item.khmerName}</span>
+            </div>
+          </div>
+          <span class="text-xs font-extrabold text-blue-600 dark:text-blue-400">${item.qty} ដង</span>
+        `;
+        topSellingContainer.appendChild(div);
+      });
+    }
+
+    function renderDashboardCharts() {
+      const ctx = document.getElementById('chart-sales-profit').getContext('2d');
+      if (salesProfitChartInstance) {
+        salesProfitChartInstance.destroy();
+      }
+
+      // Group Sales by Month
+      const salesByMonth = {};
+      const profitByMonth = {};
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      
+      // Initialize months with 0
+      months.forEach(m => {
+        salesByMonth[m] = 0;
+        profitByMonth[m] = 0;
+      });
+
+      state.sales.forEach(sale => {
+        const date = new Date(sale.date);
+        const monthLabel = months[date.getMonth()];
+        salesByMonth[monthLabel] += parseFloat(sale.total) || 0;
+        profitByMonth[monthLabel] += parseFloat(sale.profit) || 0;
+      });
+
+      const salesData = months.map(m => salesByMonth[m]);
+      const profitData = months.map(m => profitByMonth[m]);
+
+      salesProfitChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: months,
+          datasets: [
+            {
+              label: 'ការលក់សរុប (Sales)',
+              data: salesData,
+              backgroundColor: '#0ea5e9',
+              borderRadius: 6,
+            },
+            {
+              label: 'ប្រាក់ចំណេញ (Profit)',
+              data: profitData,
+              backgroundColor: '#10b981',
+              borderRadius: 6,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: state.isDarkMode ? '#94a3b8' : '#475569',
+                font: { family: 'Kantumruy Pro' }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: state.isDarkMode ? '#94a3b8' : '#475569' },
+              grid: { display: false }
+            },
+            y: {
+              ticks: { color: state.isDarkMode ? '#94a3b8' : '#475569' },
+              grid: { color: state.isDarkMode ? '#334155' : '#f1f5f9' }
+            }
+          }
+        }
+      });
+    }
+
+    // ==================== PRODUCT ACTIONS ====================
+    let filterSearchProductList = [];
+    
+    function renderProductsView() {
+      // Populating the categories dropdown for inputs
+      populateCategoriesDropdowns();
+      populateSuppliersDropdowns();
+
+      filterSearchProductList = [...state.products];
+      filterAndSearchProducts();
+    }
+
+    function populateCategoriesDropdowns() {
+      const selectors = ['filter-product-category', 'prod-category', 'pos-category-select'];
+      selectors.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const currentVal = el.value;
+        el.innerHTML = id.includes('filter') || id.includes('pos') ? '<option value="">ក្រុមទំនិញទាំងអស់</option>' : '<option value="">-- ជ្រើសរើសក្រុមទំនិញ --</option>';
+        state.categories.forEach(cat => {
+          el.innerHTML += `<option value="${cat.id}">${cat.name}</option>`;
+        });
+        el.value = currentVal;
+      });
+    }
+
+    function populateSuppliersDropdowns() {
+      const selectors = ['prod-supplier', 'stock-in-supplier'];
+      selectors.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const currentVal = el.value;
+        el.innerHTML = '<option value="">-- ជ្រើសរើសដៃគូ --</option>';
+        state.suppliers.forEach(sup => {
+          el.innerHTML += `<option value="${sup.id}">${sup.name}</option>`;
+        });
+        el.value = currentVal;
+      });
+    }
+
+    window.filterAndSearchProducts = function() {
+      const query = document.getElementById('search-product-input').value.toLowerCase().trim();
+      const cat = document.getElementById('filter-product-category').value;
+
+      filterSearchProductList = state.products.filter(p => {
+        const matchesQuery = p.name.toLowerCase().includes(query) || p.barcode.includes(query) || (p.khmerName && p.khmerName.toLowerCase().includes(query));
+        const matchesCat = cat === "" || p.category === cat;
+        return matchesQuery && matchesCat;
+      });
+
+      state.productPage = 1;
+      displayProductsTable();
+    };
+
+    function displayProductsTable() {
+      const tbody = document.getElementById('products-table-body');
+      tbody.innerHTML = '';
+
+      const startIndex = (state.productPage - 1) * state.productsPerPage;
+      const paginatedList = filterSearchProductList.slice(startIndex, startIndex + state.productsPerPage);
+
+      if (paginatedList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-xs text-slate-400">មិនមានផលិតផលតាមតម្រូវការស្វែងរកឡើយ</td></tr>`;
+        document.getElementById('product-pagination-info').innerText = "បង្ហាញ 0 នៃ 0 ទំនិញ";
+        return;
+      }
+
+      paginatedList.forEach(prod => {
+        const catName = state.categories.find(c => c.id === prod.category)?.name || 'ផ្សេងៗ';
+        const imgUrl = prod.image ? prod.image : 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=60';
+        
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/40 transition duration-150 border-b border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300";
+        tr.innerHTML = `
+          <td class="px-6 py-4 flex items-center gap-3">
+            <img class="w-10 h-10 rounded-xl object-cover cursor-pointer" src="${imgUrl}" onclick="openProductDetailModal('${prod.id}')" onerror="this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=60'">
+            <div>
+              <span class="text-xs bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full font-bold">${prod.barcode}</span>
+            </div>
+          </td>
+          <td class="px-6 py-4 font-semibold text-slate-900 dark:text-white cursor-pointer" onclick="openProductDetailModal('${prod.id}')">${prod.name}<br><span class="text-xs text-slate-400">${prod.khmerName || ''}</span></td>
+          <td class="px-6 py-4 text-xs font-semibold">${catName}</td>
+          <td class="px-6 py-4 text-right font-semibold">$${parseFloat(prod.costPrice).toFixed(2)}</td>
+          <td class="px-6 py-4 text-right font-extrabold text-blue-600 dark:text-blue-400">$${parseFloat(prod.sellingPrice).toFixed(2)}</td>
+          <td class="px-6 py-4 text-center">
+            <span class="px-2.5 py-1 rounded-full text-xs font-extrabold ${prod.quantity < 10 ? 'bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400 animate-pulse' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'}">
+              ${prod.quantity} ${prod.unit || 'pcs'}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-right">
+            <div class="flex justify-end gap-1.5">
+              <button onclick="openProductModal('${prod.id}')" class="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-blue-600 rounded-lg transition" title="Edit">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </button>
+              <button onclick="deleteProduct('${prod.id}')" class="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-rose-500 rounded-lg transition" title="Delete">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const totalResults = filterSearchProductList.length;
+      const endItem = Math.min(startIndex + state.productsPerPage, totalResults);
+      document.getElementById('product-pagination-info').innerText = `បង្ហាញ ${totalResults === 0 ? 0 : startIndex + 1} ដល់ ${endItem} នៃ ${totalResults} ទំនិញ`;
+    }
+
+    window.changeProductPage = function(dir) {
+      const maxPages = Math.ceil(filterSearchProductList.length / state.productsPerPage);
+      const targetPage = state.productPage + dir;
+      if (targetPage >= 1 && targetPage <= maxPages) {
+        state.productPage = targetPage;
+        displayProductsTable();
+      }
+    };
+
+    window.openProductModal = function(id = null) {
+      const modal = document.getElementById('modal-product');
+      const form = document.getElementById('product-form');
+      form.reset();
+
+      if (id) {
+        const prod = state.products.find(p => p.id === id);
+        document.getElementById('modal-product-title').innerText = "កែប្រែព័ត៌មានទំនិញ";
+        document.getElementById('product-id-edit').value = prod.id;
+        document.getElementById('prod-barcode').value = prod.barcode;
+        document.getElementById('prod-name').value = prod.name;
+        document.getElementById('prod-name-kh').value = prod.khmerName || '';
+        document.getElementById('prod-category').value = prod.category;
+        document.getElementById('prod-cost').value = prod.costPrice;
+        document.getElementById('prod-price').value = prod.sellingPrice;
+        document.getElementById('prod-qty').value = prod.quantity;
+        document.getElementById('prod-unit').value = prod.unit;
+        document.getElementById('prod-supplier').value = prod.supplier;
+        document.getElementById('prod-image').value = prod.image || '';
+        document.getElementById('prod-desc').value = prod.description || '';
+      } else {
+        document.getElementById('modal-product-title').innerText = "បញ្ចូលទំនិញថ្មី";
+        document.getElementById('product-id-edit').value = '';
+        // Auto-generate barcode if required as fallback
+        document.getElementById('prod-barcode').value = "884" + Math.floor(Math.random() * 100000000);
+      }
+      modal.classList.remove('hidden');
+    };
+
+    window.closeProductModal = function() {
+      document.getElementById('modal-product').classList.add('hidden');
+    };
+
+    window.saveProduct = async function(event) {
+      event.preventDefault();
+      
+      const id = document.getElementById('product-id-edit').value;
+      const barcode = document.getElementById('prod-barcode').value.trim();
+      const name = document.getElementById('prod-name').value.trim();
+      const khmerName = document.getElementById('prod-name-kh').value.trim();
+      const category = document.getElementById('prod-category').value;
+      const costPrice = parseFloat(document.getElementById('prod-cost').value);
+      const sellingPrice = parseFloat(document.getElementById('prod-price').value);
+      const quantity = parseInt(document.getElementById('prod-qty').value);
+      const unit = document.getElementById('prod-unit').value.trim();
+      const supplier = document.getElementById('prod-supplier').value;
+      const image = document.getElementById('prod-image').value.trim();
+      const description = document.getElementById('prod-desc').value.trim();
+
+      // Auth validation check: Staff cannot edit products (Permission rule)
+      if (state.currentUser && state.currentUser.role === 'Staff' && id !== '') {
+        showToast("បុគ្គលិកមិនមានសិទ្ធិកែប្រែព័ត៌មានទំនិញឡើយ!", "warning");
+        closeProductModal();
+        return;
+      }
+
+      const payload = { barcode, name, khmerName, category, costPrice, sellingPrice, quantity, unit, supplier, image, description };
+
+      if (isOfflineSimulation) {
+        if (id) {
+          // Update
+          const idx = state.products.findIndex(p => p.id === id);
+          state.products[idx] = { ...state.products[idx], ...payload };
+          showToast("ធ្វើបច្ចុប្បន្នភាពទំនិញជោគជ័យ!");
+        } else {
+          // Create
+          const newId = "prod-" + Date.now();
+          state.products.push({ id: newId, ...payload });
+          showToast("បន្ថែមទំនិញថ្មីរួចរាល់!");
+        }
+        saveToLocalStorage();
+        closeProductModal();
+        renderProductsView();
+      } else {
+        try {
+          if (id) {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'products', id);
+            await updateDoc(docRef, payload);
+            showToast("ធ្វើបច្ចុប្បន្នភាពទំនិញជោគជ័យ!");
+          } else {
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'products');
+            await addDoc(colRef, payload);
+            showToast("បន្ថែមទំនិញថ្មីរួចរាល់!");
+          }
+          closeProductModal();
+        } catch (err) {
+          showToast(err.message, "warning");
+        }
+      }
+    };
+
+    window.deleteProduct = async function(id) {
+      if (state.currentUser && state.currentUser.role === 'Staff') {
+        showToast("បុគ្គលិកមិនមានសិទ្ធិលុបទំនិញឡើយ!", "warning");
+        return;
+      }
+
+      if (!confirm("តើអ្នកប្រាកដជាចង់លុបទំនិញនេះមែនទេ?")) return;
+
+      if (isOfflineSimulation) {
+        state.products = state.products.filter(p => p.id !== id);
+        saveToLocalStorage();
+        showToast("លុបទំនិញជោគជ័យ!");
+        renderProductsView();
+      } else {
+        try {
+          const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'products', id);
+          await deleteDoc(docRef);
+          showToast("លុបទំនិញជោគជ័យ!");
+        } catch (err) {
+          showToast(err.message, "warning");
+        }
+      }
+    };
+
+    window.openProductDetailModal = function(id) {
+      const prod = state.products.find(p => p.id === id);
+      if (!prod) return;
+
+      document.getElementById('detail-prod-image').src = prod.image || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=120';
+      document.getElementById('detail-prod-name').innerText = prod.name;
+      document.getElementById('detail-prod-barcode').innerText = prod.barcode;
+      document.getElementById('detail-prod-khmer').innerText = prod.khmerName || '---';
+      
+      const catName = state.categories.find(c => c.id === prod.category)?.name || 'ផ្សេងៗ';
+      document.getElementById('detail-prod-category').innerText = catName;
+      document.getElementById('detail-prod-cost').innerText = `$${parseFloat(prod.costPrice).toFixed(2)}`;
+      document.getElementById('detail-prod-price').innerText = `$${parseFloat(prod.sellingPrice).toFixed(2)}`;
+      document.getElementById('detail-prod-qty').innerText = `${prod.quantity} ${prod.unit || 'pcs'}`;
+      
+      const supName = state.suppliers.find(s => s.id === prod.supplier)?.name || 'គ្មាន';
+      document.getElementById('detail-prod-supplier').innerText = supName;
+
+      document.getElementById('modal-product-detail').classList.remove('hidden');
+    };
+
+    window.closeProductDetailModal = function() {
+      document.getElementById('modal-product-detail').classList.add('hidden');
+    };
+
+    // ==================== CATEGORIES ACTIONS ====================
+    function renderCategoriesView() {
+      const tbody = document.getElementById('categories-table-body');
+      tbody.innerHTML = '';
+
+      if (state.categories.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="px-6 py-8 text-center text-xs text-slate-400">មិនទាន់មានក្រុមទំនិញនៅឡើយទេ</td></tr>`;
+        return;
+      }
+
+      state.categories.forEach(cat => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/40 transition duration-150 border-b border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300";
+        tr.innerHTML = `
+          <td class="px-6 py-4 font-mono font-semibold text-xs text-slate-400">${cat.id}</td>
+          <td class="px-6 py-4 font-semibold text-slate-900 dark:text-white">${cat.name}</td>
+          <td class="px-6 py-4 text-right">
+            <div class="flex justify-end gap-1.5">
+              <button onclick="editCategory('${cat.id}')" class="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-blue-600 rounded-lg transition" title="Edit">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </button>
+              <button onclick="deleteCategory('${cat.id}')" class="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-rose-500 rounded-lg transition" title="Delete">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.saveCategory = async function(event) {
+      event.preventDefault();
+      const id = document.getElementById('category-id-edit').value;
+      const name = document.getElementById('category-name-input').value.trim();
+
+      if (isOfflineSimulation) {
+        if (id) {
+          const idx = state.categories.findIndex(c => c.id === id);
+          state.categories[idx].name = name;
+          showToast("ធ្វើបច្ចុប្បន្នភាពក្រុមទំនិញរួចរាល់!");
+        } else {
+          state.categories.push({ id: "cat-" + Date.now(), name });
+          showToast("បង្កើតក្រុមទំនិញថ្មីជោគជ័យ!");
+        }
+        saveToLocalStorage();
+        resetCategoryForm();
+        renderCategoriesView();
+      } else {
+        try {
+          if (id) {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'categories', id);
+            await updateDoc(docRef, { name });
+            showToast("ធ្វើបច្ចុប្បន្នភាពក្រុមទំនិញរួចរាល់!");
+          } else {
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'categories');
+            await addDoc(colRef, { name });
+            showToast("បង្កើតក្រុមទំនិញថ្មីជោគជ័យ!");
+          }
+          resetCategoryForm();
+        } catch (err) {
+          showToast(err.message, "warning");
+        }
+      }
+    };
+
+    window.editCategory = function(id) {
+      const cat = state.categories.find(c => c.id === id);
+      document.getElementById('category-form-title').innerText = "កែប្រែព័ត៌មានក្រុមទំនិញ";
+      document.getElementById('category-id-edit').value = cat.id;
+      document.getElementById('category-name-input').value = cat.name;
+    };
+
+    window.resetCategoryForm = function() {
+      document.getElementById('category-form-title').innerText = "បង្កើតក្រុមទំនិញថ្មី";
+      document.getElementById('category-id-edit').value = '';
+      document.getElementById('category-name-input').value = '';
+    };
+
+    window.deleteCategory = async function(id) {
+      if (state.currentUser && state.currentUser.role === 'Staff') {
+        showToast("បុគ្គលិកមិនមានសិទ្ធិលុបក្រុមទំនិញឡើយ!", "warning");
+        return;
+      }
+      if (!confirm("តើអ្នកចង់លុបក្រុមទំនិញនេះមែនទេ? (ទំនិញដែលពាក់ព័ន្ធនឹងបាត់បង់ក្រុម)")) return;
+
+      if (isOfflineSimulation) {
+        state.categories = state.categories.filter(c => c.id !== id);
+        saveToLocalStorage();
+        showToast("លុបក្រុមទំនិញជោគជ័យ!");
+        renderCategoriesView();
+      } else {
+        try {
+          const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'categories', id);
+          await deleteDoc(docRef);
+          showToast("លុបក្រុមទំនិញជោគជ័យ!");
+        } catch (err) {
+          showToast(err.message, "warning");
+        }
+      }
+    };
+
+    // ==================== SUPPLIERS ACTIONS ====================
+    function renderSuppliersView() {
+      const tbody = document.getElementById('suppliers-table-body');
+      tbody.innerHTML = '';
+
+      if (state.suppliers.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-xs text-slate-400">មិនទាន់មានដៃគូផ្គត់ផ្គង់នៅឡើយទេ</td></tr>`;
+        return;
+      }
+
+      state.suppliers.forEach(sup => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/40 transition duration-150 border-b border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300";
+        tr.innerHTML = `
+          <td class="px-6 py-4 font-semibold text-slate-900 dark:text-white">${sup.name}</td>
+          <td class="px-6 py-4 text-xs font-medium">${sup.phone}<br><span class="text-[10px] text-slate-400 font-mono">${sup.email || ''}</span></td>
+          <td class="px-6 py-4 text-xs max-w-xs truncate">${sup.address || '---'}</td>
+          <td class="px-6 py-4 text-right">
+            <div class="flex justify-end gap-1.5">
+              <button onclick="editSupplier('${sup.id}')" class="p-1.5 hover:bg-blue-50 dark:hover:bg-blue-500/10 text-blue-600 rounded-lg transition" title="Edit">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </button>
+              <button onclick="deleteSupplier('${sup.id}')" class="p-1.5 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-rose-500 rounded-lg transition" title="Delete">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    window.saveSupplier = async function(event) {
+      event.preventDefault();
+      const id = document.getElementById('supplier-id-edit').value;
+      const name = document.getElementById('supplier-name').value.trim();
+      const phone = document.getElementById('supplier-phone').value.trim();
+      const email = document.getElementById('supplier-email').value.trim();
+      const address = document.getElementById('supplier-address').value.trim();
+      const notes = document.getElementById('supplier-notes').value.trim();
+
+      const payload = { name, phone, email, address, notes };
+
+      if (isOfflineSimulation) {
+        if (id) {
+          const idx = state.suppliers.findIndex(s => s.id === id);
+          state.suppliers[idx] = { ...state.suppliers[idx], ...payload };
+          showToast("កែប្រែដៃគូផ្គត់ផ្គង់ជោគជ័យ!");
+        } else {
+          state.suppliers.push({ id: "sup-" + Date.now(), ...payload });
+          showToast("បន្ថែមដៃគូផ្គត់ផ្គង់ថ្មីជោគជ័យ!");
+        }
+        saveToLocalStorage();
+        resetSupplierForm();
+        renderSuppliersView();
+      } else {
+        try {
+          if (id) {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'suppliers', id);
+            await updateDoc(docRef, payload);
+            showToast("កែប្រែដៃគូផ្គត់ផ្គង់ជោគជ័យ!");
+          } else {
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'suppliers');
+            await addDoc(colRef, payload);
+            showToast("បន្ថែមដៃគូផ្គត់ផ្គង់ថ្មីជោគជ័យ!");
+          }
+          resetSupplierForm();
+        } catch (err) {
+          showToast(err.message, "warning");
+        }
+      }
+    };
+
+    window.editSupplier = function(id) {
+      const sup = state.suppliers.find(s => s.id === id);
+      document.getElementById('supplier-form-title').innerText = "កែប្រែដៃគូផ្គត់ផ្គង់";
+      document.getElementById('supplier-id-edit').value = sup.id;
+      document.getElementById('supplier-name').value = sup.name;
+      document.getElementById('supplier-phone').value = sup.phone;
+      document.getElementById('supplier-email').value = sup.email || '';
+      document.getElementById('supplier-address').value = sup.address || '';
+      document.getElementById('supplier-notes').value = sup.notes || '';
+    };
+
+    window.resetSupplierForm = function() {
+      document.getElementById('supplier-form-title').innerText = "បញ្ចូលព័ត៌មានដៃគូផ្គត់ផ្គង់";
+      document.getElementById('supplier-id-edit').value = '';
+      document.getElementById('supplier-form').reset();
+    };
+
+    window.deleteSupplier = async function(id) {
+      if (state.currentUser && state.currentUser.role === 'Staff') {
+        showToast("បុគ្គលិកមិនមានសិទ្ធិលុបព័ត៌មានឡើយ!", "warning");
+        return;
+      }
+      if (!confirm("តើអ្នកចង់លុបដៃគូផ្គត់ផ្គង់នេះពិតមែនទេ?")) return;
+
+      if (isOfflineSimulation) {
+        state.suppliers = state.suppliers.filter(s => s.id !== id);
+        saveToLocalStorage();
+        showToast("លុបដៃគូផ្គត់ផ្គង់ជោគជ័យ!");
+        renderSuppliersView();
+      } else {
+        try {
+          const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'suppliers', id);
+          await deleteDoc(docRef);
+          showToast("លុបដៃគូផ្គត់ផ្គង់ជោគជ័យ!");
+        } catch (err) {
+          showToast(err.message, "warning");
+        }
+      }
+    };
+
+    // ==================== STOCK MANAGEMENT ACTIONS ====================
+    window.switchStockSubTab = function(sub) {
+      state.activeStockSubTab = sub;
+      const tabs = ['stock-in', 'stock-out', 'stock-adjust', 'stock-history'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`subtab-${t}`);
+        const panel = document.getElementById(`panel-${t}`);
+        if (t === sub) {
+          btn.className = "py-2.5 px-4 text-sm font-semibold border-b-2 border-blue-600 text-blue-600 transition";
+          panel.classList.remove('hidden');
+        } else {
+          btn.className = "py-2.5 px-4 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-white transition";
+          panel.classList.add('hidden');
+        }
+      });
+      renderStockView();
+    };
+
+    function renderStockView() {
+      // Setup dynamic product selections for stock operations
+      const pInSelect = document.getElementById('stock-in-product');
+      const pOutSelect = document.getElementById('stock-out-product');
+      const pAdjSelect = document.getElementById('stock-adjust-product');
+
+      [pInSelect, pOutSelect, pAdjSelect].forEach(select => {
+        if (!select) return;
+        const currentVal = select.value;
+        select.innerHTML = '<option value="">-- ជ្រើសរើសទំនិញ --</option>';
+        state.products.forEach(p => {
+          select.innerHTML += `<option value="${p.id}">${p.name} (${p.khmerName || ''}) - ស្តុក៖ ${p.quantity}</option>`;
+        });
+        select.value = currentVal;
+      });
+
+      // Populate Suppliers selection for Stock In
+      const pSupSelect = document.getElementById('stock-in-supplier');
+      if (pSupSelect) {
+        const currentVal = pSupSelect.value;
+        pSupSelect.innerHTML = '<option value="">-- ជ្រើសរើសអ្នកផ្គត់ផ្គង់ --</option>';
+        state.suppliers.forEach(s => {
+          pSupSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+        });
+        pSupSelect.value = currentVal;
+      }
+
+      // Display transactions history
+      displayStockHistory();
+    }
+
+    window.handleStockTransaction = async function(event, type) {
+      event.preventDefault();
+      
+      let pId, qty, additionalVal = '', note = '';
+
+      if (type === 'in') {
+        pId = document.getElementById('stock-in-product').value;
+        qty = parseInt(document.getElementById('stock-in-qty').value);
+        additionalVal = parseFloat(document.getElementById('stock-in-cost').value);
+        note = `អ្នកផ្គត់ផ្គង់៖ ` + (state.suppliers.find(s => s.id === document.getElementById('stock-in-supplier').value)?.name || 'មិនដឹង');
+      } else if (type === 'out') {
+        pId = document.getElementById('stock-out-product').value;
+        qty = parseInt(document.getElementById('stock-out-qty').value);
+        note = document.getElementById('stock-out-note').value.trim();
+      } else if (type === 'adjust') {
+        pId = document.getElementById('stock-adjust-product').value;
+        qty = parseInt(document.getElementById('stock-adjust-qty').value);
+        note = document.getElementById('stock-adjust-note').value.trim();
+      }
+
+      const prod = state.products.find(p => p.id === pId);
+      if (!prod) {
+        showToast("សូមជ្រើសរើសផលិតផលជាមុនសិន!", "warning");
+        return;
+      }
+
+      // Validations: Prevent negative stock outcomes
+      let finalQty = prod.quantity;
+      if (type === 'in') {
+        finalQty += qty;
+      } else if (type === 'out') {
+        if (prod.quantity < qty) {
+          showToast(`ស្តុកមិនគ្រប់គ្រាន់សម្រាប់ដកចេញឡើយ! (ស្តុកមាន៖ ${prod.quantity})`, "warning");
+          return;
+        }
+        finalQty -= qty;
+      } else if (type === 'adjust') {
+        finalQty = qty;
+      }
+
+      const transaction = {
+        productId: pId,
+        productName: prod.name,
+        type: type, // 'in', 'out', 'adjust'
+        quantity: qty,
+        date: new Date().toISOString(),
+        note: note
+      };
+
+      if (isOfflineSimulation) {
+        // Update product quantity local state
+        prod.quantity = finalQty;
+        if (type === 'in') {
+          prod.costPrice = additionalVal; // Auto update cost price
+        }
+        state.stockTransactions.push(transaction);
+        saveToLocalStorage();
+        showToast("កត់ត្រាប្រតិបត្តិការស្តុកជោគជ័យ!");
+        event.target.reset();
+        renderStockView();
+      } else {
+        try {
+          const prodDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'products', pId);
+          const transColRef = collection(db, 'artifacts', appId, 'public', 'data', 'stockTransactions');
+          
+          await updateDoc(prodDocRef, { 
+            quantity: finalQty,
+            ...(type === 'in' ? { costPrice: additionalVal } : {})
+          });
+          await addDoc(transColRef, transaction);
+          showToast("កត់ត្រាប្រតិបត្តិការស្តុកជោគជ័យ!");
+          event.target.reset();
+        } catch (err) {
+          showToast(err.message, "warning");
+        }
+      }
+    };
+
+    function displayStockHistory() {
+      const tbody = document.getElementById('stock-history-table-body');
+      tbody.innerHTML = '';
+
+      const list = [...state.stockTransactions].reverse();
+
+      if (list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-xs text-slate-400">មិនទាន់មានប្រតិបត្តិការស្តុកនៅឡើយទេ</td></tr>`;
+        return;
+      }
+
+      list.forEach(item => {
+        const dateStr = new Date(item.date).toLocaleString('km-KH');
+        let typeBadge = '';
+        if (item.type === 'in') {
+          typeBadge = '<span class="px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[10px] rounded-full font-bold">នាំចូល (In)</span>';
+        } else if (item.type === 'out') {
+          typeBadge = '<span class="px-2.5 py-1 bg-rose-100 text-rose-700 text-[10px] rounded-full font-bold">នាំចេញ (Out)</span>';
+        } else {
+          typeBadge = '<span class="px-2.5 py-1 bg-amber-100 text-amber-700 text-[10px] rounded-full font-bold">កែសម្រួល (Adjust)</span>';
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300";
+        tr.innerHTML = `
+          <td class="px-6 py-4 text-xs">${dateStr}</td>
+          <td class="px-6 py-4 font-bold text-slate-900 dark:text-white">${item.productName || 'Unknown Product'}</td>
+          <td class="px-6 py-4">${typeBadge}</td>
+          <td class="px-6 py-4 text-center font-bold">${item.quantity}</td>
+          <td class="px-6 py-4 text-xs max-w-xs truncate text-slate-500">${item.note || ''}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ==================== POS SALES SYSTEM ACTIONS ====================
+    let filteredPOSProductsList = [];
+
+    function renderPOSView() {
+      filteredPOSProductsList = [...state.products];
+      
+      // Update Category selectors for POS fast search
+      const catSelect = document.getElementById('pos-category-select');
+      catSelect.innerHTML = '<option value="">ក្រុមទំនិញទាំងអស់</option>';
+      state.categories.forEach(c => {
+        catSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+      });
+
+      filterPOSProducts();
+      renderPOSCart();
+    }
+
+    window.filterPOSProducts = function() {
+      const query = document.getElementById('pos-search-input').value.toLowerCase().trim();
+      const cat = document.getElementById('pos-category-select').value;
+
+      filteredPOSProductsList = state.products.filter(p => {
+        const matchesQuery = p.name.toLowerCase().includes(query) || p.barcode.includes(query) || (p.khmerName && p.khmerName.toLowerCase().includes(query));
+        const matchesCat = cat === '' || p.category === cat;
+        return matchesQuery && matchesCat;
+      });
+
+      const grid = document.getElementById('pos-products-grid');
+      grid.innerHTML = '';
+
+      if (filteredPOSProductsList.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center text-slate-400 text-xs py-16">រកមិនឃើញទំនិញស្រដៀងគ្នាឡើយ</div>`;
+        return;
+      }
+
+      filteredPOSProductsList.forEach(prod => {
+        const isLow = prod.quantity < 10;
+        const img = prod.image ? prod.image : 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100';
+        
+        const card = document.createElement('div');
+        card.className = `bg-white dark:bg-slate-900 border ${prod.quantity <= 0 ? 'border-rose-300 opacity-60' : 'border-slate-200 dark:border-slate-800 hover:border-blue-500'} p-3.5 rounded-2xl flex flex-col gap-2.5 transition duration-150 cursor-pointer select-none relative shadow-sm`;
+        card.onclick = () => {
+          if (prod.quantity <= 0) {
+            showToast("ទំនិញនេះអស់ពីស្តុកហើយ!", "warning");
+          } else {
+            addToPOSCart(prod.id);
+          }
+        };
+
+        card.innerHTML = `
+          <div class="relative w-full h-24 overflow-hidden rounded-xl bg-slate-100">
+            <img class="w-full h-full object-cover" src="${img}" onerror="this.src='https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=100'">
+            ${prod.quantity <= 0 ? '<span class="absolute inset-0 bg-black/60 text-white text-[10px] font-bold uppercase flex items-center justify-center">Out of Stock</span>' : ''}
+          </div>
+          <div>
+            <h4 class="text-xs font-bold dark:text-white leading-relaxed truncate">${prod.name}</h4>
+            <span class="text-[10px] text-slate-400 truncate block">${prod.khmerName || ''}</span>
+          </div>
+          <div class="flex items-center justify-between mt-auto pt-1">
+            <span class="text-xs font-extrabold text-blue-600 dark:text-blue-400">$${prod.sellingPrice.toFixed(2)}</span>
+            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${isLow ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'}" title="ស្តុក">
+              ${prod.quantity}
+            </span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    };
+
+    window.addToPOSCart = function(productId) {
+      const prod = state.products.find(p => p.id === productId);
+      if (!prod) return;
+
+      const cartItem = state.posCart.find(i => i.productId === productId);
+      if (cartItem) {
+        if (cartItem.quantity >= prod.quantity) {
+          showToast(`មិនអាចលក់លើសចំនួនក្នុងឃ្លាំងបានឡើយ! (ស្តុកមាន៖ ${prod.quantity})`, "warning");
+          return;
+        }
+        cartItem.quantity += 1;
+      } else {
+        state.posCart.push({
+          productId: prod.id,
+          name: prod.name,
+          khmerName: prod.khmerName,
+          price: prod.sellingPrice,
+          cost: prod.costPrice,
+          quantity: 1,
+          unit: prod.unit
+        });
+      }
+      renderPOSCart();
+    };
+
+    window.updateCartItemQty = function(productId, val) {
+      const prod = state.products.find(p => p.id === productId);
+      const cartItem = state.posCart.find(i => i.productId === productId);
+      if (!cartItem) return;
+
+      const newQty = cartItem.quantity + val;
+      if (newQty <= 0) {
+        state.posCart = state.posCart.filter(i => i.productId !== productId);
+      } else {
+        if (newQty > prod.quantity) {
+          showToast(`មិនអាចលក់លើសស្តុកបានទេ!`, "warning");
+          return;
+        }
+        cartItem.quantity = newQty;
+      }
+      renderPOSCart();
+    };
+
+    window.clearPOSCart = function() {
+      state.posCart = [];
+      renderPOSCart();
+    };
+
+    function renderPOSCart() {
+      const container = document.getElementById('pos-cart-container');
+      container.innerHTML = '';
+
+      if (state.posCart.length === 0) {
+        container.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-slate-400 gap-3">
+            <svg class="w-12 h-12 stroke-slate-300 dark:stroke-slate-700" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            <span class="text-xs font-medium">កន្ត្រកទំនេរ</span>
+          </div>
+        `;
+        recalculateCart();
+        return;
+      }
+
+      state.posCart.forEach(item => {
+        const div = document.createElement('div');
+        div.className = "flex items-center justify-between bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-100 dark:border-slate-850 gap-2";
+        div.innerHTML = `
+          <div class="flex-1 min-w-0">
+            <h4 class="text-xs font-bold truncate dark:text-white">${item.name}</h4>
+            <span class="text-[10px] text-slate-400">$${item.price.toFixed(2)} / ${item.unit || 'pcs'}</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="flex items-center border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg">
+              <button onclick="updateCartItemQty('${item.productId}', -1)" class="p-1 px-2.5 text-xs text-slate-500 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition">-</button>
+              <span class="px-2 text-xs font-bold dark:text-white text-center min-w-8">${item.quantity}</span>
+              <button onclick="updateCartItemQty('${item.productId}', 1)" class="p-1 px-2.5 text-xs text-slate-500 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition">+</button>
+            </div>
+            <span class="text-xs font-bold dark:text-white w-14 text-right">$${(item.price * item.quantity).toFixed(2)}</span>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+
+      recalculateCart();
+    }
+
+    let calculatedCartTotal = 0;
+    let calculatedCartSubtotal = 0;
+    let calculatedCartProfit = 0;
+
+    window.recalculateCart = function() {
+      const discountPct = parseFloat(document.getElementById('pos-discount-input').value) || 0;
+      const taxPct = parseFloat(document.getElementById('pos-tax-input').value) || 0;
+
+      calculatedCartSubtotal = state.posCart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+      const discountVal = (calculatedCartSubtotal * discountPct) / 100;
+      const taxVal = ((calculatedCartSubtotal - discountVal) * taxPct) / 100;
+      calculatedCartTotal = calculatedCartSubtotal - discountVal + taxVal;
+
+      // Profit calculation
+      const totalCost = state.posCart.reduce((acc, item) => acc + ((item.cost || 0) * item.quantity), 0);
+      calculatedCartProfit = calculatedCartTotal - totalCost;
+
+      document.getElementById('pos-subtotal').innerText = `$${calculatedCartSubtotal.toFixed(2)}`;
+      document.getElementById('pos-grand-total').innerText = `$${calculatedCartTotal.toFixed(2)}`;
+      
+      const totalKhr = Math.round(calculatedCartTotal * state.settings.rate);
+      document.getElementById('pos-exchange-khr').innerHTML = `<span>ជាប្រាក់រៀល (KHR):</span><span>៛ ${totalKhr.toLocaleString('km-KH')}</span>`;
+    };
+
+    let selectedPaymentMethod = 'cash';
+
+    window.triggerPaymentModal = function(method) {
+      if (state.posCart.length === 0) {
+        showToast("សូមបន្ថែមទំនិញចូលក្នុងកន្ត្រកជាមុនសិន!", "warning");
+        return;
+      }
+      selectedPaymentMethod = method;
+      
+      document.getElementById('pay-total-usd').innerText = `$${calculatedCartTotal.toFixed(2)}`;
+      const totalKhr = Math.round(calculatedCartTotal * state.settings.rate);
+      document.getElementById('pay-total-khr').innerText = `៛ ${totalKhr.toLocaleString('km-KH')}`;
+
+      const cashDiv = document.getElementById('pay-cash-inputs');
+      const qrDiv = document.getElementById('pay-qr-display');
+
+      if (method === 'cash') {
+        document.getElementById('payment-modal-title').innerText = "ការទូទាត់ជាសាច់ប្រាក់ផ្ទាល់ (Cash)";
+        cashDiv.classList.remove('hidden');
+        qrDiv.classList.add('hidden');
+        document.getElementById('pay-cash-usd-received').value = Math.ceil(calculatedCartTotal);
+        calculateChange();
+      } else {
+        document.getElementById('payment-modal-title').innerText = "ទូទាត់ប្រាក់រហ័សតាម KHQR";
+        cashDiv.classList.add('hidden');
+        qrDiv.classList.remove('hidden');
+      }
+
+      document.getElementById('modal-payment').classList.remove('hidden');
+    };
+
+    window.closePaymentModal = function() {
+      document.getElementById('modal-payment').classList.add('hidden');
+    };
+
+    window.calculateChange = function() {
+      const received = parseFloat(document.getElementById('pay-cash-usd-received').value) || 0;
+      const changeUsd = Math.max(0, received - calculatedCartTotal);
+      const changeKhr = Math.round(changeUsd * state.settings.rate);
+
+      document.getElementById('pay-change-returned').innerText = `$${changeUsd.toFixed(2)} / ៛${changeKhr.toLocaleString('km-KH')}`;
+    };
+
+    window.submitPOSSale = async function() {
+      const receivedUsd = parseFloat(document.getElementById('pay-cash-usd-received').value) || calculatedCartTotal;
+      const changeUsd = Math.max(0, receivedUsd - calculatedCartTotal);
+
+      // Create Sale Object
+      const sale = {
+        date: new Date().toISOString(),
+        items: state.posCart,
+        total: calculatedCartTotal,
+        profit: calculatedCartProfit,
+        paymentMethod: selectedPaymentMethod,
+        cashier: state.currentUser ? state.currentUser.name : 'Unknown User'
+      };
+
+      // Apply changes to store quantities (RULE 1 & 2 compliant state reduction)
+      if (isOfflineSimulation) {
+        const saleId = "sale-" + Date.now();
+        state.sales.push({ id: saleId, ...sale });
+        
+        // Deduct quantities locally
+        state.posCart.forEach(item => {
+          const prod = state.products.find(p => p.id === item.productId);
+          if (prod) prod.quantity = Math.max(0, prod.quantity - item.quantity);
+        });
+
+        saveToLocalStorage();
+        closePaymentModal();
+        showToast("ការលក់ត្រូវបានកត់ត្រាជោគជ័យ!");
+        openReceiptPreview({ id: saleId, ...sale }, receivedUsd, changeUsd);
+        clearPOSCart();
+      } else {
+        try {
+          const salesColRef = collection(db, 'artifacts', appId, 'public', 'data', 'sales');
+          
+          // Atomic update simulation across docs
+          const docRef = await addDoc(salesColRef, sale);
+          
+          // Firestore update calls for each product quantity deduct
+          for (let item of state.posCart) {
+            const prod = state.products.find(p => p.id === item.productId);
+            if (prod) {
+              const pRef = doc(db, 'artifacts', appId, 'public', 'data', 'products', prod.id);
+              await updateDoc(pRef, { quantity: Math.max(0, prod.quantity - item.quantity) });
+            }
+          }
+
+          closePaymentModal();
+          showToast("ការលក់ត្រូវបានកត់ត្រាជោគជ័យ!");
+          openReceiptPreview({ id: docRef.id, ...sale }, receivedUsd, changeUsd);
+          clearPOSCart();
+        } catch (err) {
+          showToast(err.message, "warning");
+        }
+      }
+    };
+
+    function openReceiptPreview(saleObj, received, change) {
+      document.getElementById('receipt-shop-name').innerText = state.settings.shopName;
+      document.getElementById('receipt-shop-address').innerText = `អាសយដ្ឋាន៖ ` + state.settings.address;
+      document.getElementById('receipt-shop-phone').innerText = `ទូរស័ព្ទ៖ ` + state.settings.phone;
+
+      document.getElementById('receipt-id').innerText = `INV-${saleObj.id.toUpperCase().slice(-8)}`;
+      document.getElementById('receipt-date').innerText = new Date(saleObj.date).toLocaleString('km-KH');
+      document.getElementById('receipt-cashier').innerText = saleObj.cashier || 'Cashier';
+
+      // Load products onto thermal template
+      const tbody = document.getElementById('receipt-items-body');
+      tbody.innerHTML = '';
+      saleObj.items.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.className = "border-b border-slate-100 text-[10px]";
+        tr.innerHTML = `
+          <td class="py-1.5 font-sans">${item.name}<br><span class="text-[9px] text-slate-400 font-sans">${item.khmerName || ''}</span></td>
+          <td class="text-center py-1.5">${item.quantity}</td>
+          <td class="text-right py-1.5">$${(item.price * item.quantity).toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const discPct = parseFloat(document.getElementById('pos-discount-input').value) || 0;
+      const taxPct = parseFloat(document.getElementById('pos-tax-input').value) || 0;
+
+      document.getElementById('receipt-subtotal').innerText = `$${calculatedCartSubtotal.toFixed(2)}`;
+      document.getElementById('receipt-discount').innerText = `${discPct}%`;
+      document.getElementById('receipt-tax').innerText = `${taxPct}%`;
+      document.getElementById('receipt-grand-total').innerText = `$${saleObj.total.toFixed(2)}`;
+      
+      const totalKhr = Math.round(saleObj.total * state.settings.rate);
+      document.getElementById('receipt-grand-total-khr').innerText = `៛ ${totalKhr.toLocaleString('km-KH')}`;
+      
+      document.getElementById('receipt-received').innerText = `$${received.toFixed(2)}`;
+      document.getElementById('receipt-change').innerText = `$${change.toFixed(2)}`;
+
+      document.getElementById('modal-receipt').classList.remove('hidden');
+    }
+
+    window.closeReceiptModal = function() {
+      document.getElementById('modal-receipt').classList.add('hidden');
+      navigate('pos');
+    };
+
+    window.printThermalReceipt = function() {
+      window.print();
+    };
+
+    // ==================== REPORTS AND EXPORTS SYSTEM ====================
+    function renderReportsView() {
+      // Set default report dates to current month
+      const startInput = document.getElementById('report-date-start');
+      const endInput = document.getElementById('report-date-end');
+
+      if (!startInput.value || !endInput.value) {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth(), 1);
+        startInput.value = start.toISOString().split('T')[0];
+        endInput.value = now.toISOString().split('T')[0];
+      }
+    }
+
+    window.generateReportData = function() {
+      const type = document.getElementById('report-type-select').value;
+      const start = new Date(document.getElementById('report-date-start').value);
+      const end = new Date(document.getElementById('report-date-end').value);
+      // End date sets to the very end of the day boundary
+      end.setHours(23, 59, 59, 999);
+
+      state.activeReportType = type;
+
+      const resultsBody = document.getElementById('report-results-body');
+      resultsBody.innerHTML = '';
+
+      let headers = [];
+      let rows = [];
+
+      if (type === 'sales') {
+        document.getElementById('report-table-title').innerText = "របាយការណ៍លក់សរុប (Sales Summary)";
+        headers = ["កាលបរិច្ឆេទ", "កូដវិក្កយបត្រ", "សរុប ($)", "ប្រាក់ចំណេញ ($)", "វិធីទូទាត់", "អ្នកលក់"];
+        
+        const filtered = state.sales.filter(s => {
+          const d = new Date(s.date);
+          return d >= start && d <= end;
+        });
+
+        filtered.forEach(sale => {
+          rows.push([
+            new Date(sale.date).toLocaleString('km-KH'),
+            `INV-${sale.id.toUpperCase().slice(-8)}`,
+            `$${sale.total.toFixed(2)}`,
+            `$${sale.profit.toFixed(2)}`,
+            sale.paymentMethod === 'cash' ? 'សាច់ប្រាក់' : 'KHQR',
+            sale.cashier || '---'
+          ]);
+        });
+      } else if (type === 'stock') {
+        document.getElementById('report-table-title').innerText = "របាយការណ៍តម្លៃស្តុកក្នុងដៃ (Stock Valuation)";
+        headers = ["កូដទំនិញ", "ឈ្មោះទំនិញ", "ក្រុមទំនិញ", "ថ្លៃដើម (Cost)", "តម្លៃលក់", "ស្តុកបច្ចុប្បន្ន", "តម្លៃស្តុកសរុប"];
+        
+        state.products.forEach(p => {
+          const cat = state.categories.find(c => c.id === p.category)?.name || 'ផ្សេងៗ';
+          const totalVal = parseFloat(p.costPrice) * parseInt(p.quantity);
+          rows.push([
+            p.barcode,
+            p.name,
+            cat,
+            `$${parseFloat(p.costPrice).toFixed(2)}`,
+            `$${parseFloat(p.sellingPrice).toFixed(2)}`,
+            `${p.quantity} ${p.unit}`,
+            `$${totalVal.toFixed(2)}`
+          ]);
+        });
+      } else if (type === 'movement') {
+        document.getElementById('report-table-title').innerText = "របាយការណ៍ចរន្តស្តុក (Stock Movement Log)";
+        headers = ["កាលបរិច្ឆេទ", "ឈ្មោះទំនិញ", "ប្រភេទ", "ចំនួន", "មូលហេតុ/ព័ត៌មាន"];
+        
+        const filtered = state.stockTransactions.filter(t => {
+          const d = new Date(t.date);
+          return d >= start && d <= end;
+        });
+
+        filtered.forEach(item => {
+          rows.push([
+            new Date(item.date).toLocaleString('km-KH'),
+            item.productName,
+            item.type === 'in' ? 'នាំចូល (In)' : (item.type === 'out' ? 'នាំចេញ (Out)' : 'កែសម្រួល (Adjust)'),
+            item.quantity,
+            item.note || '---'
+          ]);
+        });
+      } else if (type === 'profit') {
+        document.getElementById('report-table-title').innerText = "របាយការណ៍សរុបប្រាក់ចំណេញ (Profit Statement)";
+        headers = ["កាលបរិច្ឆេទ", "ប្រាក់ចំណូលលក់ (Sales)", "ប្រាក់ចំណេញសុទ្ធ (Profit)"];
+        
+        // Group by Date key
+        const profitMap = {};
+        state.sales.forEach(s => {
+          const d = new Date(s.date);
+          if (d >= start && d <= end) {
+            const dateStr = d.toLocaleDateString('km-KH');
+            if (!profitMap[dateStr]) {
+              profitMap[dateStr] = { sales: 0, profit: 0 };
+            }
+            profitMap[dateStr].sales += s.total;
+            profitMap[dateStr].profit += s.profit;
+          }
+        });
+
+        Object.keys(profitMap).forEach(key => {
+          rows.push([
+            key,
+            `$${profitMap[key].sales.toFixed(2)}`,
+            `$${profitMap[key].profit.toFixed(2)}`
+          ]);
+        });
+      }
+
+      state.activeReportData = rows; // Cache for exports
+      
+      // Render Table HTML headers
+      const thead = document.querySelector('#report-results-table thead');
+      thead.innerHTML = '';
+      const trHead = document.createElement('tr');
+      trHead.className = "bg-slate-50 dark:bg-slate-850 border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-500 uppercase";
+      headers.forEach(h => {
+        const th = document.createElement('th');
+        th.className = "px-6 py-4";
+        th.innerText = h;
+        trHead.appendChild(th);
+      });
+      thead.appendChild(trHead);
+
+      // Render Table rows
+      if (rows.length === 0) {
+        resultsBody.innerHTML = `<tr><td colspan="${headers.length}" class="px-6 py-8 text-center text-xs text-slate-400">មិនមានលទ្ធផលទិន្នន័យសម្រាប់ស្វែងរកឡើយ</td></tr>`;
+        document.getElementById('report-rows-count').innerText = "0 record";
+        return;
+      }
+
+      rows.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 dark:hover:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs";
+        row.forEach((cell, idx) => {
+          const td = document.createElement('td');
+          td.className = "px-6 py-4";
+          td.innerText = cell;
+          // Apply custom bolding color for pricing elements
+          if (typeof cell === 'string' && cell.startsWith('$')) {
+            td.className += " font-extrabold text-slate-900 dark:text-white";
+          }
+          tr.appendChild(td);
+        });
+        resultsBody.appendChild(tr);
+      });
+
+      document.getElementById('report-rows-count').innerText = `${rows.length} records`;
+    };
+
+    window.exportReportData = function(format) {
+      if (state.activeReportData.length === 0) {
+        showToast("សូមចុចទាញយកទិន្នន័យជាមុនសិន!", "warning");
+        return;
+      }
+
+      if (format === 'csv') {
+        let csvContent = "data:text/csv;charset=utf-8,\ufeff";
+        // Grab header titles
+        const headerRow = [];
+        document.querySelectorAll('#report-results-table thead th').forEach(th => headerRow.push(th.innerText));
+        csvContent += headerRow.join(",") + "\r\n";
+
+        state.activeReportData.forEach(row => {
+          csvContent += row.map(v => `"${v}"`).join(",") + "\r\n";
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `report-${state.activeReportType}-${Date.now()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        // PDF Trigger
+        window.print();
+      }
+    };
+
+    // ==================== SETTINGS MANAGEMENT ACTIONS ====================
+    function renderSettingsView() {
+      document.getElementById('settings-shop-name').value = state.settings.shopName;
+      document.getElementById('settings-shop-phone').value = state.settings.phone;
+      document.getElementById('settings-shop-address').value = state.settings.address;
+      document.getElementById('settings-shop-currency').value = state.settings.currency;
+      document.getElementById('settings-shop-rate').value = state.settings.rate;
+      document.getElementById('settings-shop-logo').value = state.settings.logo || '';
+    }
+
+    window.saveShopSettings = async function(event) {
+      event.preventDefault();
+      
+      const shopName = document.getElementById('settings-shop-name').value.trim();
+      const phone = document.getElementById('settings-shop-phone').value.trim();
+      const address = document.getElementById('settings-shop-address').value.trim();
+      const currency = document.getElementById('settings-shop-currency').value;
+      const rate = parseInt(document.getElementById('settings-shop-rate').value);
+      const logo = document.getElementById('settings-shop-logo').value.trim();
+
+      const payload = { shopName, phone, address, currency, rate, logo };
+
+      if (isOfflineSimulation) {
+        state.settings = payload;
+        saveToLocalStorage();
+        applyStoreSettings();
+        showToast("ការកំណត់ត្រូវបានរក្សាទុកជោគជ័យ!");
+      } else {
+        try {
+          const docId = state.settings.id;
+          if (docId) {
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', docId);
+            await updateDoc(docRef, payload);
+          } else {
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'settings');
+            await addDoc(colRef, payload);
+          }
+          showToast("ការកំណត់ត្រូវបានរក្សាទុកជោគជ័យ!");
+        } catch (err) {
+          showToast(err.message, "warning");
+        }
+      }
+    };
+
+    function applyStoreSettings() {
+      document.getElementById('header-shop-name').innerText = state.settings.shopName;
+      document.getElementById('header-shop-currency').innerText = `Currency: ${state.settings.currency} (1$ = ${state.settings.rate}៛)`;
+    }
+
+    // ==================== GLOBAL HELPERS & LOW STOCK ALERTS ====================
+    function checkLowStockAlerts() {
+      const lowStockProducts = state.products.filter(p => p.quantity < 10);
+      const alertHeader = document.getElementById('low-stock-alert-header');
+      const countSpan = document.getElementById('low-stock-badge-count');
+
+      if (lowStockProducts.length > 0) {
+        alertHeader.classList.remove('hidden');
+        countSpan.innerText = lowStockProducts.length;
+      } else {
+        alertHeader.classList.add('hidden');
+      }
+    }
+
+    window.showLowStockModal = function() {
+      const lowStockProducts = state.products.filter(p => p.quantity < 10);
+      const listContainer = document.getElementById('low-stock-modal-list');
+      listContainer.innerHTML = '';
+
+      if (lowStockProducts.length === 0) {
+        listContainer.innerHTML = `<p class="text-center text-xs text-slate-400 py-6">គ្មានផលិតផលណាមួយជិតអស់ពីស្តុកឡើយ</p>`;
+      } else {
+        lowStockProducts.forEach(prod => {
+          const div = document.createElement('div');
+          div.className = "flex items-center justify-between py-2 text-xs border-b border-slate-50 dark:border-slate-850";
+          div.innerHTML = `
+            <div>
+              <span class="font-bold text-slate-800 dark:text-white">${prod.name}</span><br>
+              <span class="text-[10px] text-slate-400">Barcode: ${prod.barcode}</span>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-rose-100 text-rose-700 font-extrabold text-[11px] animate-pulse">${prod.quantity} ${prod.unit}</span>
+          `;
+          listContainer.appendChild(div);
+        });
+      }
+      document.getElementById('modal-low-stock').classList.remove('hidden');
+    };
+
+    window.closeLowStockModal = function() {
+      document.getElementById('modal-low-stock').classList.add('hidden');
+    };
+
+    // ==================== RESPONSIVE LAYOUT TOGGLES ====================
+    window.toggleSidebar = function() {
+      const sidebar = document.getElementById('sidebar');
+      state.sidebarCollapsed = !state.sidebarCollapsed;
+      if (state.sidebarCollapsed) {
+        sidebar.classList.add('-translate-x-full');
+      } else {
+        sidebar.classList.remove('-translate-x-full');
+      }
+    };
+
+    window.toggleDarkMode = function() {
+      state.isDarkMode = !state.isDarkMode;
+      const html = document.documentElement;
+      const dot = document.getElementById('dark-mode-dot');
+      const btn = document.getElementById('dark-mode-btn');
+
+      if (state.isDarkMode) {
+        html.classList.add('dark');
+        dot.className = "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-5";
+        btn.className = "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-blue-600";
+      } else {
+        html.classList.remove('dark');
+        dot.className = "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0";
+        btn.className = "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none bg-slate-700";
+      }
+      
+      // Redraw charts using correct dark/light labels colors
+      if (state.currentView === 'dashboard') {
+        renderDashboardCharts();
+      }
+    };
+
+    // Responsive Auto Resize listener
+    window.addEventListener('resize', () => {
+      const sidebar = document.getElementById('sidebar');
+      if (window.innerWidth >= 1024) {
+        sidebar.classList.remove('-translate-x-full');
+        state.sidebarCollapsed = false;
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        state.sidebarCollapsed = true;
+      }
+    });
+
+    // On-Load Initializer
+    window.onload = function() {
+      buildSidebarNavigation();
+      initCloudAuthAndData();
+      applyStoreSettings();
+      
+      // Auto trigger resize calculation on startup
+      window.dispatchEvent(new Event('resize'));
+    };
+
+  </script>
+</body>
+</html>
